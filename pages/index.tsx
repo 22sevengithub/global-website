@@ -1,4 +1,5 @@
 import Layout from '../components/Layout';
+import FeatureCard from '../components/FeatureCard';
 import Link from 'next/link';
 
 export default function Home() {
@@ -50,7 +51,7 @@ export default function Home() {
       </section>
 
       {/* Wellness, Wealth, Wisdom Section */}
-      <section className="py-16 bg-white bg-grid-pattern">
+      <section className="py-16 bg-vault-gray-50">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl font-bold font-display mb-3 text-vault-black">
@@ -62,120 +63,83 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-5">
-            {/* Wellness */}
-            <div className="group p-6 rounded-xl bg-white border border-vault-gray-200 hover:border-vault-gray-300 hover:shadow-sm transition-all">
-              <div className="w-10 h-10 bg-vault-green-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-vault-green-100 transition-colors">
-                <svg className="w-5 h-5 text-vault-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold font-display mb-2 text-vault-black">Wellness</h3>
-              <p className="text-vault-gray-600 leading-relaxed text-sm">
-                Tools for budgeting, debt management, insurance, and savings to establish a solid financial foundation.
-              </p>
-            </div>
-
-            {/* Wealth */}
-            <div className="group p-6 rounded-xl bg-white border border-vault-gray-200 hover:border-vault-gray-300 hover:shadow-sm transition-all">
-              <div className="w-10 h-10 bg-vault-green-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-vault-green-100 transition-colors">
-                <svg className="w-5 h-5 text-vault-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold font-display mb-2 text-vault-black">Wealth</h3>
-              <p className="text-vault-gray-600 leading-relaxed text-sm">
-                Financial advice, goal setting, and asset management with AI-powered personalised guidance for growth.
-              </p>
-            </div>
-
-            {/* Wisdom */}
-            <div className="group p-6 rounded-xl bg-white border border-vault-gray-200 hover:border-vault-gray-300 hover:shadow-sm transition-all">
-              <div className="w-10 h-10 bg-vault-green-50 rounded-lg flex items-center justify-center mb-4 group-hover:bg-vault-green-100 transition-colors">
-                <svg className="w-5 h-5 text-vault-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold font-display mb-2 text-vault-black">Wisdom</h3>
-              <p className="text-vault-gray-600 leading-relaxed text-sm">
-                Actionable insights, product recommendations, and data-driven financial planning for smarter decisions.
-              </p>
-            </div>
+            <FeatureCard
+              icon="❤️"
+              title="Wellness"
+              description="Tools for budgeting, debt management, insurance, and savings to establish a solid financial foundation."
+              pattern="dots"
+            />
+            <FeatureCard
+              icon="📈"
+              title="Wealth"
+              description="Financial advice, goal setting, and asset management with AI-powered personalised guidance for growth."
+              pattern="grid"
+            />
+            <FeatureCard
+              icon="💡"
+              title="Wisdom"
+              description="Actionable insights, product recommendations, and data-driven financial planning for smarter decisions."
+              pattern="waves"
+            />
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-vault-gray-50">
+      <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold font-display text-vault-black mb-4">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-bold font-display text-vault-black mb-3">
               Everything You Need in One Place
             </h2>
-            <p className="text-lg text-vault-gray-600 max-w-2xl mx-auto">
+            <p className="text-base text-vault-gray-600 max-w-2xl mx-auto">
               Complete financial tools to help you succeed
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Feature 1 */}
-            <div className="group p-6 rounded-xl bg-white border border-vault-gray-200 hover:border-vault-green hover:shadow-md transition-all">
-              <div className="text-3xl mb-4">📊</div>
-              <h3 className="text-lg font-bold font-display mb-2 text-vault-black">Complete Financial Picture</h3>
-              <p className="text-vault-gray-600 leading-relaxed text-sm">
-                See all your money in one place. Track income, expenses, and net worth effortlessly.
-              </p>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="group p-6 rounded-xl bg-white border border-vault-gray-200 hover:border-vault-green hover:shadow-md transition-all">
-              <div className="text-3xl mb-4">🎯</div>
-              <h3 className="text-lg font-bold font-display mb-2 text-vault-black">Personalised Financial Plan</h3>
-              <p className="text-vault-gray-600 leading-relaxed text-sm">
-                Tailored advice on budgeting, saving, and investing based on your unique goals.
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="group p-6 rounded-xl bg-white border border-vault-gray-200 hover:border-vault-green hover:shadow-md transition-all">
-              <div className="text-3xl mb-4">💪</div>
-              <h3 className="text-lg font-bold font-display mb-2 text-vault-black">Conquer Your Debt</h3>
-              <p className="text-vault-gray-600 leading-relaxed text-sm">
-                Smart strategies to manage and reduce debt effectively and regain control.
-              </p>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="group p-6 rounded-xl bg-white border border-vault-gray-200 hover:border-vault-green hover:shadow-md transition-all">
-              <div className="text-3xl mb-4">📈</div>
-              <h3 className="text-lg font-bold font-display mb-2 text-vault-black">Invest Your Way</h3>
-              <p className="text-vault-gray-600 leading-relaxed text-sm">
-                Diverse investment options with smart tools to build a strong portfolio.
-              </p>
-            </div>
-
-            {/* Feature 5 */}
-            <div className="group p-6 rounded-xl bg-white border border-vault-gray-200 hover:border-vault-green hover:shadow-md transition-all">
-              <div className="text-3xl mb-4">🛡️</div>
-              <h3 className="text-lg font-bold font-display mb-2 text-vault-black">Protect What Matters</h3>
-              <p className="text-vault-gray-600 leading-relaxed text-sm">
-                Find the right insurance coverage to safeguard your future and loved ones.
-              </p>
-            </div>
-
-            {/* Feature 6 */}
-            <div className="group p-6 rounded-xl bg-white border border-vault-gray-200 hover:border-vault-green hover:shadow-md transition-all">
-              <div className="text-3xl mb-4">📚</div>
-              <h3 className="text-lg font-bold font-display mb-2 text-vault-black">Learn and Grow</h3>
-              <p className="text-vault-gray-600 leading-relaxed text-sm">
-                Helpful resources, guides, and expert insights to boost your financial knowledge.
-              </p>
-            </div>
+            <FeatureCard
+              icon="📊"
+              title="Complete Financial Picture"
+              description="See all your money in one place. Track income, expenses, and net worth effortlessly."
+              pattern="dots"
+            />
+            <FeatureCard
+              icon="🎯"
+              title="Personalised Financial Plan"
+              description="Tailored advice on budgeting, saving, and investing based on your unique goals."
+              pattern="grid"
+            />
+            <FeatureCard
+              icon="💪"
+              title="Conquer Your Debt"
+              description="Smart strategies to manage and reduce debt effectively and regain control."
+              pattern="waves"
+            />
+            <FeatureCard
+              icon="📈"
+              title="Invest Your Way"
+              description="Diverse investment options with smart tools to build a strong portfolio."
+              pattern="gradient"
+            />
+            <FeatureCard
+              icon="🛡️"
+              title="Protect What Matters"
+              description="Find the right insurance coverage to safeguard your future and loved ones."
+              pattern="dots"
+            />
+            <FeatureCard
+              icon="📚"
+              title="Learn and Grow"
+              description="Helpful resources, guides, and expert insights to boost your financial knowledge."
+              pattern="grid"
+            />
           </div>
 
           <div className="text-center mt-10">
             <Link
               href="/products"
-              className="inline-flex items-center px-7 py-3 bg-vault-green text-white rounded-lg font-semibold text-base hover:bg-vault-green-dark transition-all hover:shadow-md"
+              className="inline-flex items-center px-6 py-2.5 bg-vault-green text-white rounded-lg font-semibold text-sm hover:bg-vault-green-dark transition-all hover:shadow-md shadow-sm"
             >
               Explore All Products
               <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
