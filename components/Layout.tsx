@@ -33,7 +33,7 @@ export default function Layout({
         <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       </Head>
 
-      <div className="min-h-screen flex flex-col bg-white">
+      <div className="min-h-screen flex flex-col bg-white dark:bg-vault-gray-900 transition-colors">
         <Header />
         <main className="flex-grow">
           {children}
