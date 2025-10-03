@@ -9,32 +9,34 @@ module.exports = {
     extend: {
       colors: {
         vault: {
-          // Softer green palette
-          green: '#00D66E',
-          'green-light': '#4ADE80',
-          'green-dark': '#059669',
-          // From live site: Yellow accent
-          yellow: '#FFCB05',
-          'yellow-light': '#FFF203',
-          'yellow-dark': '#FFB800',
-          // Supporting colors
-          blue: '#0066FF',
-          'blue-dark': '#004499',
-          'blue-gradient-start': '#0052CC',
-          'blue-gradient-end': '#00CCCC',
-          black: '#0F0F16',
+          // Modern green accent palette - inspired by wio.io
+          green: '#00E676',
+          'green-light': '#69F0AE',
+          'green-dark': '#00C853',
+          'green-50': '#E8F5E9',
+          'green-100': '#C8E6C9',
+          'green-900': '#1B5E20',
+          // Accent colors
+          yellow: '#FFEB3B',
+          'yellow-light': '#FFF176',
+          'yellow-dark': '#FBC02D',
+          // Supporting colors - cleaner palette
+          blue: '#2196F3',
+          'blue-dark': '#1565C0',
+          'blue-light': '#42A5F5',
+          black: '#0A0A0A',
           white: '#FFFFFF',
           gray: {
-            50: '#F8F9FA',
-            100: '#F1F3F5',
-            200: '#E5E7EB',
-            300: '#D1D5DB',
-            400: '#9CA3AF',
-            500: '#6B7280',
-            600: '#4B5563',
-            700: '#374151',
-            800: '#2C2D30',
-            900: '#111827',
+            50: '#FAFAFA',
+            100: '#F5F5F5',
+            200: '#EEEEEE',
+            300: '#E0E0E0',
+            400: '#BDBDBD',
+            500: '#9E9E9E',
+            600: '#757575',
+            700: '#616161',
+            800: '#424242',
+            900: '#212121',
           }
         }
       },
