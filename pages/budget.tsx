@@ -1,12 +1,15 @@
 import AppLayout from '../components/AppLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
+import Link from 'next/link';
 import { useApp } from '../contexts/AppContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 import { getCurrentPayPeriod, getDaysRemainingInPeriod, formatPayPeriodForDisplay, getStartDateOfPayPeriod, getEndDateOfPayPeriod } from '../utils/payPeriod';
 import { getBudgetBreakdown, calculateBudgetProgress, getBudgetAlertLevel, getTotalBudgetForPeriod } from '../utils/budget';
 import { formatMoney } from '../utils/currency';
 
 export default function Budget() {
   const { aggregate, customerInfo, loading } = useApp();
+  const { selectedCurrency } = useCurrency();
 
   if (loading || !aggregate) {
     return (
@@ -23,26 +26,82 @@ export default function Budget() {
     );
   }
 
-  const currency = customerInfo?.defaultCurrencyCode || 'AED';
+  const currency = selectedCurrency;
   const dayOfMonthPaid = customerInfo?.dayOfMonthPaid || 1;
   const currentPayPeriod = getCurrentPayPeriod(dayOfMonthPaid);
   const daysRemaining = getDaysRemainingInPeriod(currentPayPeriod, dayOfMonthPaid);
   const startDate = getStartDateOfPayPeriod(currentPayPeriod, dayOfMonthPaid);
   const endDate = getEndDateOfPayPeriod(currentPayPeriod, dayOfMonthPaid);
 
-  // Get budget breakdown by spending groups
-  const budgetBreakdown = getBudgetBreakdown(aggregate.categoryTotals, currentPayPeriod);
-  const totalBudget = getTotalBudgetForPeriod(aggregate.categoryTotals, currentPayPeriod);
-  const totalSpent = aggregate.categoryTotals
-    .filter(ct => ct.payPeriod === currentPayPeriod)
-    .reduce((sum, ct) => sum + ct.totalAmount, 0);
+  // Debug: Log category totals
+  console.log('📊 Budget Debug - Total categoryTotals:', aggregate.categoryTotals.length);
+  console.log('📊 Budget Debug - Sample category:', aggregate.categoryTotals[0]);
+  console.log('📊 Budget Debug - Current pay period:', currentPayPeriod);
+
+  // Helper function to get budget amount (matches Flutter's getBudgetedOrAverageAmount)
+  const getBudgetAmount = (ct: any) => {
+    if (ct.isTrackedForPayPeriod && ct.plannedAmount != null && ct.plannedAmount > 0) {
+      return ct.plannedAmount;
+    } else if (ct.averageAmount != null && ct.averageAmount > 0) {
+      return ct.averageAmount;
+    }
+    return 0;
+  };
+
+  // Filter categories that have values (matches Flutter's getAllWithValues logic)
+  // Show categories that have: (plannedAmount > 0 OR averageAmount > 0) OR totalAmount > 0
+  const allCategoryTotals = aggregate.categoryTotals.filter(ct => {
+    const budgetAmount = getBudgetAmount(ct);
+    const hasValue = budgetAmount > 0 || ct.totalAmount > 0;
+    if (hasValue) {
+      console.log('✅ Including category:', ct.categoryDescription, 'budget:', budgetAmount, 'spent:', ct.totalAmount);
+    }
+    return hasValue;
+  });
+
+  console.log('📊 Budget Debug - Filtered categoryTotals:', allCategoryTotals.length);
+
+  // Check if we should show empty state (like Flutter's budget_landing.dart)
+  const hasAccounts = aggregate.accounts.length > 0;
+  const hasCategoryTotals = allCategoryTotals.length > 0;
+
+  if (!hasAccounts || !hasCategoryTotals) {
+    return (
+      <ProtectedRoute>
+        <AppLayout title="Budget | Vault22">
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center max-w-md">
+              <div className="text-6xl mb-6">💰</div>
+              <h2 className="text-2xl font-bold text-vault-black dark:text-white mb-4">
+                No Budget Data Yet
+              </h2>
+              <p className="text-vault-gray-600 dark:text-vault-gray-400 mb-6">
+                {!hasAccounts
+                  ? "Connect your accounts to start tracking your budget."
+                  : "Your budget data is being calculated. Check back soon!"}
+              </p>
+              <Link href={!hasAccounts ? "/accounts" : "/dashboard"} className="px-6 py-3 bg-vault-green text-vault-black dark:text-white rounded-full font-semibold hover:bg-vault-green-light transition-all inline-block">
+                {!hasAccounts ? "Connect Accounts" : "Go to Dashboard"}
+              </Link>
+            </div>
+          </div>
+        </AppLayout>
+      </ProtectedRoute>
+    );
+  }
+
+  // Get budget breakdown by spending groups (from filtered categories)
+  const budgetBreakdown = getBudgetBreakdown(allCategoryTotals, currentPayPeriod);
+
+  // Calculate totals from ALL categories with budgets
+  const totalBudget = allCategoryTotals.reduce((sum, ct) => sum + getBudgetAmount(ct), 0);
+  const totalSpent = allCategoryTotals.reduce((sum, ct) => sum + ct.totalAmount, 0);
 
   const remaining = totalBudget - totalSpent;
   const percentUsed = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
-  // Get individual categories for current period
-  const budgetCategories = aggregate.categoryTotals
-    .filter(ct => ct.payPeriod === currentPayPeriod && (ct.plannedAmount > 0 || ct.totalAmount > 0))
+  // Get individual categories (all that have values, not just current period)
+  const budgetCategories = allCategoryTotals
     .map(ct => {
       const category = aggregate.categories.find(c => c.id === ct.categoryId);
       const spendingGroup = aggregate.spendingGroups.find(sg => sg.id === category?.spendingGroupId);
@@ -50,7 +109,7 @@ export default function Budget() {
         ...ct,
         categoryName: category?.name || 'Uncategorized',
         spendingGroupName: spendingGroup?.name || 'Other',
-        budgetAmount: ct.plannedAmount || ct.averageAmount || 0
+        budgetAmount: getBudgetAmount(ct)
       };
     })
     .sort((a, b) => b.totalAmount - a.totalAmount);

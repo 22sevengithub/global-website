@@ -3,22 +3,22 @@
 import { CategoryTotal, BudgetBreakdown, CategoryBudget } from '../types';
 
 /**
- * Get budget breakdown by spending group for the current pay period
+ * Get budget breakdown by spending group
+ * Matches Flutter's BudgetHelper.getAllWithValues() logic
  */
 export function getBudgetBreakdown(
   categoryTotals: CategoryTotal[],
   payPeriod: number
 ): BudgetBreakdown[] {
-  // Filter for current period and non-deleted
-  const currentPeriodTotals = categoryTotals.filter(
-    ct => ct.payPeriod === payPeriod && !ct.spendingGroupId
-  );
-
-  // Group by spending group
+  // categoryTotals should already be filtered by caller
+  // Just group by spending group
   const groupedBySpendingGroup: { [key: string]: BudgetBreakdown } = {};
 
-  for (const categoryTotal of currentPeriodTotals) {
+  for (const categoryTotal of categoryTotals) {
     const groupId = categoryTotal.spendingGroupId;
+
+    // Skip if no spending group ID
+    if (!groupId) continue;
 
     if (!groupedBySpendingGroup[groupId]) {
       groupedBySpendingGroup[groupId] = {
@@ -33,18 +33,16 @@ export function getBudgetBreakdown(
     // Calculate budget or average for this category
     const budgetOrAverage = getBudgetedOrAverageAmount(categoryTotal);
 
-    // Only include if has budget/average OR actual spending
-    if (budgetOrAverage > 0 || categoryTotal.totalAmount > 0) {
-      groupedBySpendingGroup[groupId].actualSpending += categoryTotal.totalAmount;
-      groupedBySpendingGroup[groupId].targetAmount += (budgetOrAverage || 0);
-      groupedBySpendingGroup[groupId].categories.push({
-        categoryId: categoryTotal.categoryId,
-        categoryName: categoryTotal.categoryDescription || '',
-        actual: categoryTotal.totalAmount,
-        target: budgetOrAverage,
-        isTracked: categoryTotal.isTrackedForPayPeriod
-      });
-    }
+    // Add to spending group totals
+    groupedBySpendingGroup[groupId].actualSpending += categoryTotal.totalAmount;
+    groupedBySpendingGroup[groupId].targetAmount += (budgetOrAverage || 0);
+    groupedBySpendingGroup[groupId].categories.push({
+      categoryId: categoryTotal.categoryId,
+      categoryName: categoryTotal.categoryDescription || '',
+      actual: categoryTotal.totalAmount,
+      target: budgetOrAverage,
+      isTracked: categoryTotal.isTrackedForPayPeriod
+    });
   }
 
   // Convert to array and sort by predefined order
@@ -225,4 +223,16 @@ export function shouldTriggerBudgetAlert(
   }
 
   return false;
+}
+
+/**
+ * Get total budgeted amount for a pay period
+ * (Alias for calculateTotalBudget for backward compatibility)
+ */
+export function getTotalBudgetForPeriod(
+  categoryTotals: CategoryTotal[],
+  payPeriod: number
+): number {
+  const result = calculateTotalBudget(categoryTotals, payPeriod);
+  return result.totalPlanned;
 }

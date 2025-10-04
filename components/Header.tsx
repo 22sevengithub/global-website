@@ -2,12 +2,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
+import CurrencySelector from './CurrencySelector';
 
 export default function Header() {
   const router = useRouter();
   const { isAuthenticated, customerInfo, logout } = useApp();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [mounted, setMounted] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -23,6 +25,19 @@ export default function Header() {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setShowLogoutModal(false);
+    await logout();
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
   };
 
   const isActive = (path: string) => router.pathname === path;
@@ -127,6 +142,11 @@ export default function Header() {
             {/* CTA Buttons */}
             {isAuthenticated ? (
               <>
+                {/* Currency Selector */}
+                <div className="ml-4">
+                  <CurrencySelector />
+                </div>
+
                 {customerInfo && (
                   <div className="ml-4 flex items-center">
                     <span className="text-sm text-vault-gray-700 dark:text-vault-gray-300 mr-3">
@@ -135,7 +155,7 @@ export default function Header() {
                   </div>
                 )}
                 <button
-                  onClick={logout}
+                  onClick={handleLogoutClick}
                   className="ml-2 px-6 py-2.5 border-2 border-red-500 text-red-500 dark:text-red-400 rounded-full font-semibold hover:bg-red-500 hover:text-white transition-all hover:shadow-lg transform hover:-translate-y-0.5"
                 >
                   Logout
@@ -167,6 +187,46 @@ export default function Header() {
           </button>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-white dark:bg-vault-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full border border-vault-gray-200 dark:border-vault-gray-700 transform transition-all animate-fade-in">
+            {/* Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Title & Message */}
+            <h3 className="text-2xl font-bold text-vault-black dark:text-white text-center mb-3">
+              Confirm Logout
+            </h3>
+            <p className="text-vault-gray-600 dark:text-vault-gray-400 text-center mb-8">
+              Are you sure you want to log out of your account? You'll need to sign in again to access your financial data.
+            </p>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={handleLogoutCancel}
+                className="flex-1 px-6 py-3 bg-vault-gray-100 dark:bg-vault-gray-700 text-vault-gray-700 dark:text-vault-gray-300 rounded-xl font-semibold hover:bg-vault-gray-200 dark:hover:bg-vault-gray-600 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogoutConfirm}
+                className="flex-1 px-6 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-all hover:shadow-lg"
+              >
+                Yes, Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

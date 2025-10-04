@@ -2,15 +2,68 @@ import AppLayout from '../components/AppLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import Link from 'next/link';
 import { useApp } from '../contexts/AppContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 import { calculateNetWorth } from '../utils/netWorth';
 import { getCurrentPayPeriod } from '../utils/payPeriod';
 import { calculateFinancialHealthScore } from '../utils/financialHealthScore';
 import { formatMoney } from '../utils/currency';
 import { calculateBudgetProgress, getBudgetAlertLevel } from '../utils/budget';
+import { useMemo } from 'react';
 
 export default function Dashboard() {
   const { aggregate, customerInfo, loading } = useApp();
+  const { selectedCurrency } = useCurrency();
 
+  // Calculate metrics from real data - memoized to prevent excessive re-renders
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  const currency = selectedCurrency;
+  const currentPayPeriod = useMemo(() =>
+    getCurrentPayPeriod(customerInfo?.dayOfMonthPaid || 1),
+    [customerInfo?.dayOfMonthPaid]
+  );
+
+  const netWorthData = useMemo(() => {
+    if (!aggregate) return { totalAssets: 0, totalLiabilities: 0, netWorth: 0, currency, timestamp: new Date().toISOString() };
+    return calculateNetWorth(aggregate.accounts, currency, aggregate.exchangeRates);
+  }, [aggregate, currency]);
+
+  const currentMonthTransactions = useMemo(() => {
+    if (!aggregate) return [];
+    return aggregate.transactions.filter(t => t.payPeriod === currentPayPeriod);
+  }, [aggregate, currentPayPeriod]);
+
+  const { monthlyIncome, monthlySpending } = useMemo(() => {
+    const income = currentMonthTransactions
+      .filter(t => t.amount.debitOrCredit === 'credit')
+      .reduce((sum, t) => sum + t.amount.amount, 0);
+
+    const spending = currentMonthTransactions
+      .filter(t => t.amount.debitOrCredit === 'debit')
+      .reduce((sum, t) => sum + Math.abs(t.amount.amount), 0);
+
+    return { monthlyIncome: income, monthlySpending: spending };
+  }, [currentMonthTransactions]);
+
+  const fhsData = useMemo(() => {
+    if (!aggregate) return { overallScore: 0, recommendations: [] };
+    return calculateFinancialHealthScore(
+      aggregate.accounts,
+      aggregate.transactions,
+      aggregate.categoryTotals,
+      aggregate.goals,
+      monthlyIncome
+    );
+  }, [aggregate, monthlyIncome]);
+
+  const topBudgetCategories = useMemo(() => {
+    if (!aggregate) return [];
+    return aggregate.categoryTotals
+      .filter(ct => ct.payPeriod === currentPayPeriod && ct.totalAmount > 0)
+      .sort((a, b) => b.totalAmount - a.totalAmount)
+      .slice(0, 5);
+  }, [aggregate, currentPayPeriod]);
+
+  // NOW we can do conditional rendering AFTER all hooks are called
   if (loading || !aggregate) {
     return (
       <ProtectedRoute>
@@ -25,35 +78,6 @@ export default function Dashboard() {
       </ProtectedRoute>
     );
   }
-
-  // Calculate metrics from real data
-  const currency = customerInfo?.defaultCurrencyCode || 'AED';
-  const netWorthData = calculateNetWorth(aggregate.accounts, currency, aggregate.exchangeRates);
-  const currentPayPeriod = getCurrentPayPeriod(customerInfo?.dayOfMonthPaid || 1);
-
-  // Calculate monthly income from transactions
-  const currentMonthTransactions = aggregate.transactions.filter(t => t.payPeriod === currentPayPeriod);
-  const monthlyIncome = currentMonthTransactions
-    .filter(t => t.amount.debitOrCredit === 'credit')
-    .reduce((sum, t) => sum + t.amount.amount, 0);
-
-  const monthlySpending = currentMonthTransactions
-    .filter(t => t.amount.debitOrCredit === 'debit')
-    .reduce((sum, t) => sum + Math.abs(t.amount.amount), 0);
-
-  const fhsData = calculateFinancialHealthScore(
-    aggregate.accounts,
-    aggregate.transactions,
-    aggregate.categoryTotals,
-    aggregate.goals,
-    monthlyIncome
-  );
-
-  // Get top budget categories
-  const topBudgetCategories = aggregate.categoryTotals
-    .filter(ct => ct.payPeriod === currentPayPeriod && ct.totalAmount > 0)
-    .sort((a, b) => b.totalAmount - a.totalAmount)
-    .slice(0, 5);
 
   return (
     <ProtectedRoute>
@@ -76,11 +100,8 @@ export default function Dashboard() {
             <p className="text-3xl font-bold text-vault-black dark:text-white mb-1">
               {formatMoney(netWorthData.netWorth, currency)}
             </p>
-            <p className="text-sm text-vault-green flex items-center">
-              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
-              </svg>
-              {netWorthData.netWorth > 0 ? '+' : ''}{((netWorthData.netWorth / netWorthData.totalAssets) * 100).toFixed(1)}%
+            <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400">
+              Total assets: {formatMoney(netWorthData.totalAssets, currency)}
             </p>
           </div>
 

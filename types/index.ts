@@ -2,7 +2,7 @@
 
 export interface Money {
   amount: number;
-  currency: string;
+  currencyCode: string;  // Fixed: was 'currency', should be 'currencyCode' to match Flutter
   debitOrCredit: 'debit' | 'credit';
 }
 
@@ -38,8 +38,12 @@ export interface Account {
   accountIcon?: string;
   deactivated: boolean;
   isDeleted: boolean;
-  currentBalance: Money;
+  currencyCode?: string;  // Added: direct currency field on account
+  currentBalance?: Money;  // Made optional
   availableBalance?: Money;
+  budgetBalance?: Money;
+  have?: Money;  // Added: used for net worth calculation
+  owe?: Money;   // Added: used for net worth calculation
   totalCreditLine?: Money;
   lastSuccessfulRefreshDate?: string;
   includeInNav: boolean;
@@ -198,6 +202,21 @@ export interface ProductFee {
   description: string;
 }
 
+export interface Currency {
+  code: string;
+  name: string;
+  symbol: string;
+}
+
+export interface Profile {
+  id?: string;
+  countryCode?: string;
+  timezone?: string;
+  idNumber?: string;
+  baseCurrency?: string;
+  supportedCurrencies?: Currency[];
+}
+
 export interface Aggregate {
   transactions: Transaction[];
   customerInfo: CustomerInfo;
@@ -211,6 +230,9 @@ export interface Aggregate {
   financialHealthScores: FinancialHealthScore[];
   products: Product[];
   goals: Goal[];
+  profile?: Profile;
+  supportedCurrencies?: Currency[];
+  baseCurrency?: string;
 }
 
 export interface BudgetBreakdown {

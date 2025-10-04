@@ -2,12 +2,14 @@ import AppLayout from '../components/AppLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 import { filterTransactions, groupTransactionsByDate } from '../utils/transactions';
-import { formatMoney } from '../utils/currency';
+import { formatMoney, convertCurrency } from '../utils/currency';
 import { getCurrentPayPeriod } from '../utils/payPeriod';
 
 export default function Transactions() {
   const { aggregate, customerInfo, loading } = useApp();
+  const { selectedCurrency } = useCurrency();
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -26,15 +28,15 @@ export default function Transactions() {
     );
   }
 
-  const currency = customerInfo?.defaultCurrencyCode || 'AED';
-  const currentPayPeriod = getCurrentPayPeriod(customerInfo?.dayOfMonthPaid || 1);
+  const currency = selectedCurrency;
 
-  // Get transactions for current pay period
-  const currentPeriodTransactions = aggregate.transactions.filter(t => t.payPeriod === currentPayPeriod);
+  // Get ALL transactions (matching Flutter behavior - load all then filter)
+  // Filter out deleted transactions
+  const allTransactions = aggregate.transactions.filter(t => !t.isDeleted);
 
-  // Filter transactions based on selected filter and search
-  const filteredTransactions = currentPeriodTransactions.filter(t => {
-    // Apply filter
+  // Apply filters based on selected filter and search
+  let filteredTransactions = allTransactions.filter(t => {
+    // Apply income/expense filter
     if (filter === 'income' && t.amount.debitOrCredit !== 'credit') return false;
     if (filter === 'expenses' && t.amount.debitOrCredit !== 'debit') return false;
 
@@ -54,12 +56,19 @@ export default function Transactions() {
     return true;
   });
 
-  // Calculate totals
-  const totalIncome = currentPeriodTransactions
+  // Sort by date (most recent first)
+  filteredTransactions = filteredTransactions.sort((a, b) => {
+    const dateA = new Date(a.date || a.transactionDate || 0).getTime();
+    const dateB = new Date(b.date || b.transactionDate || 0).getTime();
+    return dateB - dateA; // Descending order (newest first)
+  });
+
+  // Calculate totals from filtered transactions
+  const totalIncome = filteredTransactions
     .filter(t => t.amount.debitOrCredit === 'credit')
     .reduce((sum, t) => sum + t.amount.amount, 0);
 
-  const totalExpenses = currentPeriodTransactions
+  const totalExpenses = filteredTransactions
     .filter(t => t.amount.debitOrCredit === 'debit')
     .reduce((sum, t) => sum + Math.abs(t.amount.amount), 0);
 
@@ -94,12 +103,12 @@ export default function Transactions() {
           <div className="bg-white dark:bg-vault-gray-800 p-6 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700">
             <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400 mb-2">Total Income</p>
             <p className="text-3xl font-bold text-vault-green">{formatMoney(totalIncome, currency)}</p>
-            <p className="text-xs text-vault-gray-500 mt-1">This pay period</p>
+            <p className="text-xs text-vault-gray-500 mt-1">{filteredTransactions.length} transactions</p>
           </div>
           <div className="bg-white dark:bg-vault-gray-800 p-6 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700">
             <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400 mb-2">Total Expenses</p>
             <p className="text-3xl font-bold text-red-500">{formatMoney(totalExpenses, currency)}</p>
-            <p className="text-xs text-vault-gray-500 mt-1">This pay period</p>
+            <p className="text-xs text-vault-gray-500 mt-1">{allTransactions.length} total</p>
           </div>
           <div className="bg-white dark:bg-vault-gray-800 p-6 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700">
             <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400 mb-2">Net Cash Flow</p>
@@ -207,7 +216,18 @@ export default function Transactions() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <span className={`font-bold text-lg ${isIncome ? 'text-vault-green' : 'text-vault-black dark:text-white'}`}>
-                            {isIncome ? '+' : '-'}{formatMoney(Math.abs(transaction.amount.amount), transaction.amount.currency)}
+                            {(() => {
+                              const transactionCurrency = transaction.amount.currencyCode || 'AED';
+                              let amount = Math.abs(transaction.amount.amount);
+
+                              // Convert to selected currency if different
+                              if (transactionCurrency.toUpperCase() !== currency.toUpperCase()) {
+                                const converted = convertCurrency(amount, transactionCurrency, currency, aggregate.exchangeRates);
+                                amount = converted !== null ? converted : amount;
+                              }
+
+                              return `${isIncome ? '+' : '-'}${formatMoney(amount, currency)}`;
+                            })()}
                           </span>
                         </td>
                       </tr>

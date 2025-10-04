@@ -1,10 +1,13 @@
 // Net Worth Calculation Utilities
+// Matches Flutter's NetWorthTrackingService implementation
 
-import { Account, ExchangeRate, NetWorthData } from '../types';
+import { Account, ExchangeRate, NetWorthData, Money } from '../types';
 import { convertCurrency } from './currency';
+import { toRealNumber, getCurrencyCode } from './money';
 
 /**
- * Calculate net worth from accounts
+ * Calculate net worth from accounts with proper currency conversion
+ * Matches Flutter's calculateNetWorthWithConversion
  */
 export function calculateNetWorth(
   accounts: Account[],
@@ -15,39 +18,76 @@ export function calculateNetWorth(
   let totalLiabilities = 0;
 
   for (const account of accounts) {
-    if (account.deactivated || account.isDeleted) {
+    // Skip deactivated or deleted accounts, and accounts not included in nav
+    if (account.deactivated || account.isDeleted || !account.includeInNav) {
       continue;
     }
 
-    const balance = account.currentBalance.amount;
-    const currency = account.currentBalance.currency;
+    const isCredit = isCreditAccount(account);
 
-    // Convert to target currency
-    const convertedBalance = convertCurrency(
-      Math.abs(balance),
-      currency,
-      targetCurrency,
-      exchangeRates
-    );
+    // Process 'have' amount (assets)
+    if (account.have) {
+      let haveValue = toRealNumber(account.have);
+      const haveCurrency = getCurrencyCode(account.have, account.currencyCode || targetCurrency);
 
-    if (convertedBalance === null) {
-      console.warn(`Failed to convert balance for account ${account.name}`);
-      continue;
-    }
+      // Convert to target currency if needed
+      if (haveCurrency.toUpperCase() !== targetCurrency.toUpperCase()) {
+        const converted = convertCurrency(
+          Math.abs(haveValue),
+          haveCurrency,
+          targetCurrency,
+          exchangeRates
+        );
+        if (converted !== null) {
+          haveValue = haveValue < 0 ? -converted : converted;
+        }
+      }
 
-    // Asset accounts (positive balance means we have money)
-    if (isAssetAccount(account)) {
-      if (balance > 0) {
-        totalAssets += convertedBalance;
+      if (isCredit) {
+        // Credit cards: positive = debt (liability), negative = credit (asset)
+        if (haveValue > 0) {
+          totalLiabilities += haveValue;
+        } else if (haveValue < 0) {
+          totalAssets += Math.abs(haveValue);
+        }
       } else {
-        // Negative balance on asset account (overdraft)
-        totalLiabilities += convertedBalance;
+        // Regular accounts: positive = asset, negative = liability
+        if (haveValue > 0) {
+          totalAssets += haveValue;
+        } else {
+          totalLiabilities += Math.abs(haveValue);
+        }
       }
     }
-    // Liability accounts (negative balance means we owe money)
-    else if (isLiabilityAccount(account)) {
-      if (balance < 0) {
-        totalLiabilities += convertedBalance;
+
+    // Process 'owe' amount (liabilities)
+    if (account.owe) {
+      let oweValue = toRealNumber(account.owe);
+      const oweCurrency = getCurrencyCode(account.owe, account.currencyCode || targetCurrency);
+
+      // Convert to target currency if needed
+      if (oweCurrency.toUpperCase() !== targetCurrency.toUpperCase()) {
+        const converted = convertCurrency(
+          Math.abs(oweValue),
+          oweCurrency,
+          targetCurrency,
+          exchangeRates
+        );
+        if (converted !== null) {
+          oweValue = oweValue < 0 ? -converted : converted;
+        }
+      }
+
+      if (isCredit) {
+        totalLiabilities += Math.abs(oweValue);
+      } else {
+        // Owe is typically negative (debit), so add absolute value to liabilities
+        if (oweValue < 0) {
+          totalLiabilities += Math.abs(oweValue);
+        } else {
+          // Rare case: owe is positive (credit), add to assets
+          totalAssets += oweValue;
+        }
       }
     }
   }
@@ -61,6 +101,20 @@ export function calculateNetWorth(
     currency: targetCurrency,
     timestamp: new Date().toISOString()
   };
+}
+
+/**
+ * Check if account is a credit account (matches Flutter's isCreditAccount)
+ */
+export function isCreditAccount(account: Account): boolean {
+  const accountClass = account.accountClass?.toLowerCase() || '';
+  const accountType = account.accountType?.toLowerCase() || '';
+
+  return (
+    accountClass === 'creditcard' ||
+    accountClass === 'credit' ||
+    accountType.includes('credit')
+  );
 }
 
 /**
@@ -91,17 +145,21 @@ export function getAssetsByType(
   let totalAssets = 0;
 
   for (const account of accounts) {
-    if (account.deactivated || account.isDeleted || !isAssetAccount(account)) {
+    if (account.deactivated || account.isDeleted || !isAssetAccount(account) || !account.includeInNav) {
       continue;
     }
 
-    if (account.currentBalance.amount <= 0) {
+    // Use 'have' for proper calculation
+    if (!account.have || toRealNumber(account.have) <= 0) {
       continue;
     }
+
+    const haveValue = toRealNumber(account.have);
+    const haveCurrency = getCurrencyCode(account.have, account.currencyCode || targetCurrency);
 
     const convertedBalance = convertCurrency(
-      account.currentBalance.amount,
-      account.currentBalance.currency,
+      haveValue,
+      haveCurrency,
       targetCurrency,
       exchangeRates
     );
@@ -138,17 +196,21 @@ export function getLiabilitiesByType(
   let totalLiabilities = 0;
 
   for (const account of accounts) {
-    if (account.deactivated || account.isDeleted || !isLiabilityAccount(account)) {
+    if (account.deactivated || account.isDeleted || !isLiabilityAccount(account) || !account.includeInNav) {
       continue;
     }
 
-    if (account.currentBalance.amount >= 0) {
+    // Use 'owe' for liabilities
+    if (!account.owe || toRealNumber(account.owe) >= 0) {
       continue;
     }
+
+    const oweValue = Math.abs(toRealNumber(account.owe));
+    const oweCurrency = getCurrencyCode(account.owe, account.currencyCode || targetCurrency);
 
     const convertedBalance = convertCurrency(
-      Math.abs(account.currentBalance.amount),
-      account.currentBalance.currency,
+      oweValue,
+      oweCurrency,
       targetCurrency,
       exchangeRates
     );

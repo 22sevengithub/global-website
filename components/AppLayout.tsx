@@ -3,6 +3,10 @@ import Header from './Header';
 import Footer from './Footer';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useApp } from '../contexts/AppContext';
+import { useCurrency } from '../contexts/CurrencyContext';
+import { calculateNetWorth } from '../utils/netWorth';
+import { formatMoney } from '../utils/currency';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -16,6 +20,8 @@ export default function AppLayout({
   description = 'Manage your finances with Vault22'
 }: AppLayoutProps) {
   const router = useRouter();
+  const { aggregate } = useApp();
+  const { selectedCurrency } = useCurrency();
 
   const isActive = (path: string) => router.pathname === path;
 
@@ -28,6 +34,11 @@ export default function AppLayout({
     { href: '/investments', label: 'Investments', icon: '📈' },
     { href: '/health-score', label: 'Health Score', icon: '❤️' }
   ];
+
+  // Calculate real net worth
+  const netWorthData = aggregate?.accounts
+    ? calculateNetWorth(aggregate.accounts, selectedCurrency, aggregate.exchangeRates)
+    : null;
 
   return (
     <>
@@ -54,8 +65,12 @@ export default function AppLayout({
                 <div className="flex items-center justify-between p-4 bg-gradient-to-br from-vault-green/10 to-vault-blue/10 dark:from-vault-green/20 dark:to-vault-blue/20 rounded-2xl border border-vault-green/20 dark:border-vault-green/30">
                   <div>
                     <p className="text-xs text-vault-gray-600 dark:text-vault-gray-400 mb-1">Total Net Worth</p>
-                    <p className="text-2xl font-bold text-vault-black dark:text-white">$142,500</p>
-                    <p className="text-xs text-vault-green">+12.5% this month</p>
+                    <p className="text-2xl font-bold text-vault-black dark:text-white">
+                      {netWorthData ? formatMoney(netWorthData.netWorth, selectedCurrency) : '—'}
+                    </p>
+                    <p className="text-xs text-vault-gray-500 dark:text-vault-gray-400">
+                      {netWorthData && new Date(netWorthData.timestamp).toLocaleDateString()}
+                    </p>
                   </div>
                   <div className="text-3xl">💎</div>
                 </div>
@@ -81,7 +96,25 @@ export default function AppLayout({
                 ))}
               </nav>
 
-              <div className="px-3 mt-6">
+              {/* Settings Link */}
+              <div className="px-3 mt-auto pt-4 border-t border-vault-gray-200 dark:border-vault-gray-700">
+                <Link
+                  href="/settings"
+                  className={`group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all ${
+                    isActive('/settings') || isActive('/profile')
+                      ? 'bg-vault-green text-vault-black shadow-lg'
+                      : 'text-vault-gray-700 dark:text-vault-gray-300 hover:bg-vault-gray-100 dark:hover:bg-vault-gray-700 hover:text-vault-green'
+                  }`}
+                >
+                  <span className="text-2xl mr-3">⚙️</span>
+                  Settings
+                  {(isActive('/settings') || isActive('/profile')) && (
+                    <span className="ml-auto w-2 h-2 bg-vault-black rounded-full"></span>
+                  )}
+                </Link>
+              </div>
+
+              <div className="px-3 mt-4">
                 <div className="p-4 bg-gradient-to-br from-vault-blue to-vault-blue-dark dark:from-vault-blue-dark dark:to-vault-blue rounded-2xl text-white">
                   <p className="text-sm font-semibold mb-2">🎁 Upgrade to Pro</p>
                   <p className="text-xs mb-3 text-white/80">Get advanced analytics, unlimited goals, and more</p>

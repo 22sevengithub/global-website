@@ -6,72 +6,49 @@ import { authApi } from '../services/api';
 import { validateUAEMobile, formatPhoneNumber, formatPhoneInput } from '../utils/phoneValidation';
 
 export default function Login() {
+  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('+971 ');
   const [otp, setOtp] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [countdown, setCountdown] = useState(0);
   const router = useRouter();
-  const { setAuthenticated, fetchAggregate } = useApp();
+  const { setAuthenticated, loadingPhase } = useApp();
 
-  // Countdown timer for resend OTP
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (countdown > 0) {
-      interval = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
+      interval = setInterval(() => setCountdown(prev => prev - 1), 1000);
     }
     return () => clearInterval(interval);
   }, [countdown]);
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhoneInput(e.target.value);
-    setPhoneNumber(formatted);
-    setError('');
-  };
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    // Validate UAE mobile number
     if (!validateUAEMobile(phoneNumber)) {
-      setError('Please enter a valid UAE mobile number (e.g., +971 50 123 4567)');
+      setError('Please enter a valid UAE mobile number');
       setLoading(false);
       return;
     }
 
     try {
       const formattedPhone = formatPhoneNumber(phoneNumber);
-      console.log('Requesting OTP for phone:', formattedPhone);
-
       const response = await authApi.requestLoginOTP(formattedPhone);
-      console.log('OTP Response:', response);
 
       if (response.succeed) {
         setStep('otp');
         setCountdown(response.otpExpiresInSeconds || 30);
       } else {
-        setError(response.message || 'Failed to send OTP. Please try again.');
+        setError(response.message || 'Failed to send OTP');
       }
     } catch (err: any) {
-      console.error('OTP Request Error:', err);
-      console.error('Error response:', err.response);
-
-      const status = err.response?.status;
-      if (status === 400) {
-        setError('Please enter a valid UAE mobile number');
-      } else if (status === 404) {
-        setError('OTP service not available. Please try email/password login or contact support.');
-      } else if (status === 429) {
-        setError('Too many attempts. Please try again later.');
-      } else {
-        const errorMsg = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to send OTP';
-        setError(errorMsg);
-      }
+      setError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -82,7 +59,7 @@ export default function Login() {
     setLoading(true);
     setError('');
 
-    if (!otp || otp.length !== 4) {
+    if (otp.length !== 4) {
       setError('Please enter a valid 4-digit OTP');
       setLoading(false);
       return;
@@ -98,33 +75,18 @@ export default function Login() {
         return;
       }
 
-      // Save session
+      // Set authentication - this triggers 3-phase data fetch in AppContext
       setAuthenticated(true, response.customerId);
 
-      // Check if new user needs to complete profile
       if (response.phoneOnboardStatus === 'MissingInfo') {
-        // Navigate to profile completion screen
         router.push(`/complete-profile?customerId=${response.customerId}`);
         return;
       }
 
-      // Existing user - fetch aggregate and proceed
-      try {
-        await fetchAggregate();
-      } catch (fetchError) {
-        console.error('Failed to fetch aggregate data:', fetchError);
-      }
-
+      // Navigate to dashboard - data loading will continue in background
       router.push('/dashboard');
     } catch (err: any) {
-      const status = err.response?.status;
-      if (status === 401) {
-        setError('Invalid verification code. Please try again.');
-      } else if (status === 403) {
-        setError('Account is locked. Please contact support.');
-      } else {
-        setError(err.response?.data?.error || 'Verification failed. Please try again.');
-      }
+      setError(err.response?.data?.error || 'Invalid OTP. Please try again.');
       setOtp('');
     } finally {
       setLoading(false);
@@ -133,7 +95,6 @@ export default function Login() {
 
   const handleResendOTP = async () => {
     if (countdown > 0) return;
-
     setLoading(true);
     setError('');
 
@@ -144,21 +105,30 @@ export default function Login() {
       if (response.succeed) {
         setCountdown(response.otpExpiresInSeconds || 30);
         setOtp('');
-      } else {
-        setError(response.message || 'Failed to resend OTP');
       }
     } catch (err: any) {
-      setError('Failed to resend OTP. Please try again.');
+      setError('Failed to resend OTP');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBackToPhone = () => {
-    setStep('phone');
-    setOtp('');
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
     setError('');
-    setCountdown(0);
+
+    try {
+      const response = await authApi.login(email, password);
+
+      setAuthenticated(true, response.customerId);
+      router.push('/dashboard');
+    } catch (err: any) {
+      console.error('Email login error:', err);
+      setError(err.response?.data?.error || err.message || 'Invalid email or password');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -205,23 +175,92 @@ export default function Login() {
             <div className="w-full max-w-md mx-auto">
               <div className="bg-white dark:bg-vault-gray-800 rounded-3xl shadow-2xl border border-vault-gray-200 dark:border-vault-gray-700 p-8 md:p-10">
                 <h2 className="text-3xl font-bold font-display text-vault-black dark:text-white mb-2">
-                  {step === 'phone' ? 'Welcome Back' : 'Enter Verification Code'}
+                  {loginMethod === 'email' ? 'Welcome Back' : (step === 'phone' ? 'Welcome Back' : 'Enter Verification Code')}
                 </h2>
                 <p className="text-vault-gray-600 dark:text-vault-gray-400 mb-8">
-                  {step === 'phone'
-                    ? 'Enter your phone number to login'
-                    : `We sent a code to ${phoneNumber}`}
+                  {loginMethod === 'email' ? 'Sign in to your account' : (step === 'phone' ? 'Enter your UAE mobile number' : `We sent a code to ${phoneNumber}`)}
                 </p>
 
-                {/* Error Message */}
+                {/* Login Method Toggle */}
+                <div className="flex gap-2 mb-6 p-1 bg-vault-gray-100 dark:bg-vault-gray-700 rounded-lg">
+                  <button
+                    type="button"
+                    onClick={() => setLoginMethod('email')}
+                    className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${
+                      loginMethod === 'email'
+                        ? 'bg-white dark:bg-vault-gray-800 text-vault-green shadow-sm'
+                        : 'text-vault-gray-600 dark:text-vault-gray-400'
+                    }`}
+                  >
+                    Email
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLoginMethod('phone')}
+                    className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${
+                      loginMethod === 'phone'
+                        ? 'bg-white dark:bg-vault-gray-800 text-vault-green shadow-sm'
+                        : 'text-vault-gray-600 dark:text-vault-gray-400'
+                    }`}
+                  >
+                    Phone (OTP)
+                  </button>
+                </div>
+
                 {error && (
                   <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                     <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                   </div>
                 )}
 
-                {/* Phone Number Step */}
-                {step === 'phone' && (
+                {loginMethod === 'email' && (
+                  <form onSubmit={handleEmailLogin} className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-vault-gray-700 dark:text-vault-gray-300 mb-2">
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-vault-gray-200 dark:border-vault-gray-600 dark:bg-vault-gray-700 dark:text-white rounded-xl focus:border-vault-green focus:outline-none transition-all"
+                        placeholder="you@example.com"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-vault-gray-700 dark:text-vault-gray-300 mb-2">
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-vault-gray-200 dark:border-vault-gray-600 dark:bg-vault-gray-700 dark:text-white rounded-xl focus:border-vault-green focus:outline-none transition-all"
+                        placeholder="Enter your password"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full py-4 bg-vault-green text-vault-black dark:text-white font-bold rounded-xl hover:bg-vault-green-light transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-vault-black dark:border-white mr-2"></div>
+                          Signing in...
+                        </div>
+                      ) : (
+                        'Sign In'
+                      )}
+                    </button>
+                  </form>
+                )}
+
+                {loginMethod === 'phone' && step === 'phone' && (
                   <form onSubmit={handleSendOTP} className="space-y-6">
                     <div>
                       <label className="block text-sm font-semibold text-vault-gray-700 dark:text-vault-gray-300 mb-2">
@@ -235,7 +274,7 @@ export default function Login() {
                           type="tel"
                           required
                           value={phoneNumber}
-                          onChange={handlePhoneChange}
+                          onChange={(e) => setPhoneNumber(formatPhoneInput(e.target.value))}
                           className="w-full pl-12 pr-4 py-3 border-2 border-vault-gray-200 dark:border-vault-gray-600 dark:bg-vault-gray-700 dark:text-white rounded-xl focus:border-vault-green focus:outline-none transition-all"
                           placeholder="+971 50 123 4567"
                           maxLength={18}
@@ -261,8 +300,7 @@ export default function Login() {
                   </form>
                 )}
 
-                {/* OTP Verification Step */}
-                {step === 'otp' && (
+                {loginMethod === 'phone' && step === 'otp' && (
                   <form onSubmit={handleVerifyOTP} className="space-y-6">
                     <div>
                       <label className="block text-sm font-semibold text-vault-gray-700 dark:text-vault-gray-300 mb-2">
@@ -277,9 +315,8 @@ export default function Login() {
                         placeholder="0000"
                         maxLength={4}
                         inputMode="numeric"
-                        pattern="[0-9]*"
                       />
-                      <p className="mt-2 text-xs text-vault-gray-500 text-center">Enter the 4-digit code we sent you</p>
+                      <p className="mt-2 text-xs text-vault-gray-500 text-center">Enter the 4-digit code</p>
                     </div>
 
                     <button
@@ -300,8 +337,8 @@ export default function Login() {
                     <div className="flex items-center justify-between pt-4">
                       <button
                         type="button"
-                        onClick={handleBackToPhone}
-                        className="text-sm text-vault-gray-600 dark:text-vault-gray-400 hover:text-vault-green transition-all"
+                        onClick={() => setStep('phone')}
+                        className="text-sm text-vault-gray-600 dark:text-vault-gray-400 hover:text-vault-green"
                       >
                         ← Change number
                       </button>

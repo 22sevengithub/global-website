@@ -2,10 +2,12 @@ import AppLayout from '../components/AppLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 import { formatMoney } from '../utils/currency';
 
 export default function Goals() {
   const { aggregate, customerInfo, loading } = useApp();
+  const { selectedCurrency } = useCurrency();
   const [showAddModal, setShowAddModal] = useState(false);
 
   if (loading || !aggregate) {
@@ -23,7 +25,7 @@ export default function Goals() {
     );
   }
 
-  const currency = customerInfo?.defaultCurrencyCode || 'AED';
+  const currency = selectedCurrency;
 
   // Filter out "No Goal" entries
   const goals = aggregate.goals.filter(g => !g.isNoGoal);

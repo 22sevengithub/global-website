@@ -1,13 +1,17 @@
 import AppLayout from '../components/AppLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
+import LoadingAnimation from '../components/LoadingAnimation';
+import Link from 'next/link';
 import { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 import { calculateNetWorth, getAssetsByType, getLiabilitiesByType } from '../utils/netWorth';
-import { formatMoney } from '../utils/currency';
+import { formatMoney, convertCurrency } from '../utils/currency';
 import { accountApi } from '../services/api';
 
 export default function Accounts() {
   const { aggregate, customerInfo, loading, loadAggregate } = useApp();
+  const { selectedCurrency } = useCurrency();
   const [showAddModal, setShowAddModal] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
@@ -18,8 +22,8 @@ export default function Accounts() {
         <AppLayout title="Accounts | Vault22">
           <div className="flex items-center justify-center min-h-screen">
             <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-vault-green mb-4"></div>
-              <p className="text-vault-gray-600 dark:text-vault-gray-400">Loading accounts...</p>
+              <LoadingAnimation size={150} />
+              <p className="text-vault-gray-600 dark:text-vault-gray-400 mt-4">Loading accounts...</p>
             </div>
           </div>
         </AppLayout>
@@ -27,7 +31,7 @@ export default function Accounts() {
     );
   }
 
-  const currency = customerInfo?.defaultCurrencyCode || 'AED';
+  const currency = selectedCurrency;
   const netWorthData = calculateNetWorth(aggregate.accounts, currency, aggregate.exchangeRates);
   const assetsByType = getAssetsByType(aggregate.accounts, currency, aggregate.exchangeRates);
   const liabilitiesByType = getLiabilitiesByType(aggregate.accounts, currency, aggregate.exchangeRates);
@@ -44,16 +48,19 @@ export default function Accounts() {
   // Get icon for account type
   const getAccountIcon = (type: string) => {
     const icons: Record<string, string> = {
-      'Bank': '🏦',
-      'Savings': '💰',
-      'CreditCard': '💳',
-      'Investment': '📈',
-      'Cryptocurrency': '₿',
-      'RealEstate': '🏠',
-      'Loan': '🏦',
-      'Insurance': '🛡️'
+      'Bank': '/icons/bank.svg',
+      'Savings': '/icons/cash.svg',
+      'CreditCard': '/icons/credit.svg',
+      'Investment': '/icons/investments.svg',
+      'Cryptocurrency': '/icons/cryptocurrency.svg',
+      'RealEstate': '/icons/property.svg',
+      'Loan': '/icons/loans.svg',
+      'Insurance': '/icons/other.svg',
+      'Retirement': '/icons/retirement.svg',
+      'Rewards': '/icons/rewards.svg',
+      'Vehicle': '/icons/vehicles.svg'
     };
-    return icons[type] || '💼';
+    return icons[type] || '/icons/other.svg';
   };
 
   // Get color for account type
@@ -176,8 +183,23 @@ export default function Accounts() {
         {/* Accounts Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredAccounts.map((account) => {
-            const balance = account.currentBalance?.amount || 0;
-            const isLiability = balance < 0;
+            // Get balance from have/owe like Flutter does
+            const haveAmount = account.have?.amount || 0;
+            const accountCurrency = account.currentBalance?.currencyCode || account.currencyCode || currency;
+
+            // Convert to selected currency if needed
+            let displayBalance = Math.abs(haveAmount);
+            if (accountCurrency.toUpperCase() !== currency.toUpperCase()) {
+              const converted = convertCurrency(
+                Math.abs(haveAmount),
+                accountCurrency,
+                currency,
+                aggregate.exchangeRates
+              );
+              displayBalance = converted !== null ? converted : displayBalance;
+            }
+
+            const isLiability = haveAmount < 0;
 
             return (
               <div
@@ -185,8 +207,8 @@ export default function Accounts() {
                 className="bg-white dark:bg-vault-gray-800 p-6 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700 hover:border-vault-green hover:shadow-lg transition-all cursor-pointer group"
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div className={`w-12 h-12 ${getAccountColor(account.accountType)} rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform`}>
-                    {getAccountIcon(account.accountType)}
+                  <div className={`w-12 h-12 ${getAccountColor(account.accountType)} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform p-2`}>
+                    <img src={getAccountIcon(account.accountType)} alt={account.accountType} className="w-full h-full object-contain" />
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -206,7 +228,7 @@ export default function Accounts() {
                   <div>
                     <p className="text-xs text-vault-gray-500 mb-1">Balance</p>
                     <p className={`text-2xl font-bold ${isLiability ? 'text-red-500' : 'text-vault-black dark:text-white'}`}>
-                      {formatMoney(Math.abs(balance), account.currentBalance?.currency || currency)}
+                      {formatMoney(displayBalance, currency)}
                     </p>
                   </div>
                   <div className={`px-3 py-1 rounded-full text-xs font-semibold ${account.isActive ? 'bg-vault-green/20 text-vault-green' : 'bg-vault-gray-200 dark:bg-vault-gray-600 text-vault-gray-600 dark:text-vault-gray-400'}`}>
@@ -250,20 +272,28 @@ export default function Accounts() {
                 </button>
               </div>
               <div className="space-y-4">
-                <button className="w-full p-4 border-2 border-vault-gray-200 dark:border-vault-gray-700 rounded-xl hover:border-vault-green transition-all text-left flex items-center">
+                <Link
+                  href="/link-account"
+                  className="w-full p-4 border-2 border-vault-gray-200 dark:border-vault-gray-700 rounded-xl hover:border-vault-green transition-all text-left flex items-center"
+                  onClick={() => setShowAddModal(false)}
+                >
                   <span className="text-3xl mr-4">🔗</span>
                   <div>
                     <h3 className="font-bold text-vault-black dark:text-white">Connect via Open Banking</h3>
                     <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400">Instant secure connection</p>
                   </div>
-                </button>
-                <button className="w-full p-4 border-2 border-vault-gray-200 dark:border-vault-gray-700 rounded-xl hover:border-vault-green transition-all text-left flex items-center">
+                </Link>
+                <Link
+                  href="/add-manual-account"
+                  className="w-full p-4 border-2 border-vault-gray-200 dark:border-vault-gray-700 rounded-xl hover:border-vault-green transition-all text-left flex items-center"
+                  onClick={() => setShowAddModal(false)}
+                >
                   <span className="text-3xl mr-4">✍️</span>
                   <div>
                     <h3 className="font-bold text-vault-black dark:text-white">Add Manually</h3>
                     <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400">Enter details yourself</p>
                   </div>
-                </button>
+                </Link>
               </div>
             </div>
           </div>

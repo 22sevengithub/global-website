@@ -1,11 +1,13 @@
 import AppLayout from '../components/AppLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useApp } from '../contexts/AppContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 import { formatMoney } from '../utils/currency';
 import { convertCurrency } from '../utils/currency';
 
 export default function Investments() {
   const { aggregate, customerInfo, loading } = useApp();
+  const { selectedCurrency } = useCurrency();
 
   if (loading || !aggregate) {
     return (
@@ -22,7 +24,7 @@ export default function Investments() {
     );
   }
 
-  const currency = customerInfo?.defaultCurrencyCode || 'AED';
+  const currency = selectedCurrency;
 
   // Get investment accounts
   const investmentAccounts = aggregate.accounts.filter(
@@ -32,13 +34,14 @@ export default function Investments() {
   // Calculate totals
   const totalValue = investmentAccounts.reduce((sum, acc) => {
     const balance = acc.currentBalance?.amount || 0;
+    const accountCurrency = acc.currentBalance?.currencyCode || acc.currencyCode || currency;
     const converted = convertCurrency(
       balance,
-      acc.currentBalance?.currency || currency,
+      accountCurrency,
       currency,
       aggregate.exchangeRates
     );
-    return sum + (converted || balance);
+    return sum + (converted ?? 0);
   }, 0);
 
   // For now, we'll use placeholder data for performance metrics since we don't track historical data
@@ -126,12 +129,13 @@ export default function Investments() {
               <div className="space-y-4">
                 {investmentAccounts.map((account, idx) => {
                   const balance = account.currentBalance?.amount || 0;
+                  const accountCurrency = account.currentBalance?.currencyCode || account.currencyCode || currency;
                   const converted = convertCurrency(
                     balance,
-                    account.currentBalance?.currency || currency,
+                    accountCurrency,
                     currency,
                     aggregate.exchangeRates
-                  ) || balance;
+                  ) ?? 0;
                   const allocation = totalValue > 0 ? (converted / totalValue) * 100 : 0;
                   const gain = converted * 0.1; // Placeholder 10% gain
                   const gainPercent = 10; // Placeholder
@@ -223,33 +227,50 @@ export default function Investments() {
           <div className="bg-white dark:bg-vault-gray-800 p-6 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700">
             <h2 className="text-xl font-bold text-vault-black dark:text-white mb-6">Goals with Investments</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {goalsWithInvestments.map((goal) => (
-                <div key={goal.id} className="p-4 bg-vault-gray-50 dark:bg-vault-gray-700 rounded-xl">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-bold text-vault-black dark:text-white">{goal.name}</h3>
-                    <span className="text-xl">📈</span>
-                  </div>
-                  <div className="mb-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-vault-gray-600 dark:text-vault-gray-400">Progress</span>
-                      <span className="text-sm font-bold text-vault-black dark:text-white">{goal.percentageComplete.toFixed(0)}%</span>
+              {goalsWithInvestments.map((goal) => {
+                // Goals are stored in customer's default currency, convert to selected currency
+                const defaultCurrency = customerInfo?.defaultCurrencyCode || 'AED';
+                const convertedCurrentAmount = convertCurrency(
+                  goal.currentAmount,
+                  defaultCurrency,
+                  currency,
+                  aggregate.exchangeRates
+                ) ?? goal.currentAmount;
+                const convertedTargetAmount = convertCurrency(
+                  goal.targetAmount,
+                  defaultCurrency,
+                  currency,
+                  aggregate.exchangeRates
+                ) ?? goal.targetAmount;
+
+                return (
+                  <div key={goal.id} className="p-4 bg-vault-gray-50 dark:bg-vault-gray-700 rounded-xl">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-bold text-vault-black dark:text-white">{goal.name}</h3>
+                      <span className="text-xl">📈</span>
                     </div>
-                    <div className="w-full bg-vault-gray-200 dark:bg-vault-gray-600 rounded-full h-2">
-                      <div
-                        className="bg-vault-green h-2 rounded-full"
-                        style={{ width: `${goal.percentageComplete}%` }}
-                      ></div>
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm text-vault-gray-600 dark:text-vault-gray-400">Progress</span>
+                        <span className="text-sm font-bold text-vault-black dark:text-white">{goal.percentageComplete.toFixed(0)}%</span>
+                      </div>
+                      <div className="w-full bg-vault-gray-200 dark:bg-vault-gray-600 rounded-full h-2">
+                        <div
+                          className="bg-vault-green h-2 rounded-full"
+                          style={{ width: `${goal.percentageComplete}%` }}
+                        ></div>
+                      </div>
                     </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-vault-gray-600 dark:text-vault-gray-400">{formatMoney(convertedCurrentAmount, currency)}</span>
+                      <span className="font-semibold text-vault-black dark:text-white">/ {formatMoney(convertedTargetAmount, currency)}</span>
+                    </div>
+                    {goal.productName && (
+                      <p className="mt-2 text-xs text-vault-gray-500">Product: {goal.productName}</p>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-vault-gray-600 dark:text-vault-gray-400">{formatMoney(goal.currentAmount, currency)}</span>
-                    <span className="font-semibold text-vault-black dark:text-white">/ {formatMoney(goal.targetAmount, currency)}</span>
-                  </div>
-                  {goal.productName && (
-                    <p className="mt-2 text-xs text-vault-gray-500">Product: {goal.productName}</p>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

@@ -4,8 +4,10 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import { getPlatformInfo, getDeviceInfo } from '../utils/platform';
 
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://dev-api.22seven.com';
-const SIGNALR_URL = process.env.NEXT_PUBLIC_SIGNALR_URL || 'https://dev-api.22seven.com';
+// Using proxy to avoid CORS issues: Browser → Next.js API Route → Real API
+const USE_PROXY = typeof window !== 'undefined'; // Use proxy in browser, direct in server
+const API_BASE_URL = USE_PROXY ? '/api/proxy' : (process.env.NEXT_PUBLIC_API_URL || 'https://api-global.dev.vault22.io');
+const SIGNALR_URL = process.env.NEXT_PUBLIC_SIGNALR_URL || 'https://steph.develop.my227.net';
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
@@ -14,14 +16,14 @@ const apiClient: AxiosInstance = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  timeout: 30000, // 30 seconds
+  timeout: 60000, // 60 seconds (increased from 30s to handle large aggregate responses)
 });
 
 // Request interceptor to add auth tokens
 apiClient.interceptors.request.use(
   (config) => {
-    const sessionToken = localStorage.getItem('sessionToken');
-    const requestToken = localStorage.getItem('requestToken');
+    const sessionToken = sessionStorage.getItem('sessionToken');
+    const requestToken = sessionStorage.getItem('requestToken');
 
     if (sessionToken && requestToken) {
       config.headers['X-SESSION-TOKEN'] = sessionToken;
@@ -41,9 +43,9 @@ apiClient.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       // Unauthorized - clear tokens and redirect to login
-      localStorage.removeItem('sessionToken');
-      localStorage.removeItem('requestToken');
-      localStorage.removeItem('customerId');
+      sessionStorage.removeItem('sessionToken');
+      sessionStorage.removeItem('requestToken');
+      sessionStorage.removeItem('customerId');
       window.location.href = '/login';
     }
 
@@ -79,12 +81,12 @@ export const authApi = {
 
     const { sessionToken, requestToken, customerId } = response.data;
 
-    // Store tokens
-    localStorage.setItem('sessionToken', sessionToken);
-    localStorage.setItem('requestToken', requestToken);
-    localStorage.setItem('customerId', customerId);
+    // Store tokens in sessionStorage (cleared when tab closes)
+    sessionStorage.setItem('sessionToken', sessionToken);
+    sessionStorage.setItem('requestToken', requestToken);
+    sessionStorage.setItem('customerId', customerId);
 
-    // Store app version
+    // Store app version in localStorage (persistent)
     localStorage.setItem('APP_VERSION', platformInfo.appVersion);
 
     return {
@@ -101,9 +103,9 @@ export const authApi = {
     try {
       await apiClient.delete('/sessions');
     } finally {
-      localStorage.removeItem('sessionToken');
-      localStorage.removeItem('requestToken');
-      localStorage.removeItem('customerId');
+      sessionStorage.removeItem('sessionToken');
+      sessionStorage.removeItem('requestToken');
+      sessionStorage.removeItem('customerId');
     }
   },
 
@@ -170,8 +172,8 @@ export const authApi = {
 
     const response = await apiClient.post('/api/auth/otp/request', {
       countryCallingCode: dialCode,
-      phoneNumber: phoneNumber, // Already formatted (e.g., "501234567")
-      appCountryCode: 'AE',
+      phoneNumber: phoneNumber,
+      appCountryCode: 'ARE', // ISO 3166-1 alpha-3 (3 characters)
       platformInformation: {
         deviceType: platformInfo.deviceType,
         appVersion: platformInfo.appVersion,
@@ -193,16 +195,16 @@ export const authApi = {
   verifyLoginOTP: async (phoneNumber: string, otpCode: string, dialCode: string = '+971') => {
     const response = await apiClient.post('/api/auth/otp/verify', {
       countryCallingCode: dialCode,
-      phoneNumber: phoneNumber, // Already formatted (e.g., "501234567")
+      phoneNumber: phoneNumber,
       otpCode: otpCode,
     });
 
     const { sessionToken, requestToken, customerId } = response.data;
 
-    // Store tokens
-    localStorage.setItem('sessionToken', sessionToken);
-    localStorage.setItem('requestToken', requestToken);
-    localStorage.setItem('customerId', customerId);
+    // Store tokens in sessionStorage (cleared when tab closes)
+    sessionStorage.setItem('sessionToken', sessionToken);
+    sessionStorage.setItem('requestToken', requestToken);
+    sessionStorage.setItem('customerId', customerId);
 
     return response.data;
   },
@@ -220,20 +222,25 @@ export const authApi = {
     const response = await apiClient.put(`/api/auth/otp/${customerId}/info`, userInfo);
     return response.data;
   },
-
 };
 
 // Customer Functions
 export const customerApi = {
   /**
    * Get aggregate data (all customer data)
+   *
+   * Using Next.js API routes as backend
    */
   getAggregate: async (customerId: string, updatedSince?: string, getDeltas: boolean = false) => {
+    console.log('📊 Fetching aggregate data from backend API...');
+
     const params: any = {};
     if (updatedSince) params.updatedSince = updatedSince;
-    if (getDeltas) params.getDeltas = true;
+    if (getDeltas) params.getDeltas = getDeltas;
 
     const response = await apiClient.get(`/customer/${customerId}/aggregate`, { params });
+
+    console.log('✅ Aggregate data fetched successfully');
     return response.data;
   },
 
@@ -405,6 +412,95 @@ export const goalsApi = {
       `/customer/${customerId}/goals/products-recommendation/${goalId}`,
       { params: { investmentStyle } }
     );
+    return response.data;
+  },
+};
+
+// Exchange Rate Functions
+export const exchangeRateApi = {
+  /**
+   * Get exchange rates from dedicated endpoint
+   * CRITICAL: Must be fetched BEFORE showing any UI with currency conversion
+   *
+   * @param date - Optional date for historical rates (format: "YYYY-MM-DD HH:mm:ss")
+   * @param type - Optional filter: "fx" for forex, "crypto" for crypto, or null for all
+   */
+  getExchangeRates: async (date?: string, type?: string) => {
+    console.log('💱 Fetching exchange rates from dedicated endpoint...');
+
+    const params: any = {};
+    if (date) params.date = date;
+    if (type) params.type = type;
+
+    const response = await apiClient.get('/api/exchange-rates/rates', { params });
+
+    // Response is a Map object, not an array
+    console.log('✅ Exchange rate response received:', response.data);
+    return response.data;
+  },
+};
+
+// Service Provider API (for account linking)
+export const serviceProviderApi = {
+  /**
+   * Get all available service providers (banks, financial institutions)
+   */
+  getProviders: async () => {
+    console.log('🏦 Fetching service providers...');
+    const response = await apiClient.get('/api/service-providers');
+    console.log('✅ Service providers received:', response.data?.length || 0);
+    return response.data;
+  },
+
+  /**
+   * Get details for a specific service provider
+   */
+  getProvider: async (providerId: string) => {
+    console.log(`🏦 Fetching provider: ${providerId}`);
+    const response = await apiClient.get(`/api/service-providers/${providerId}`);
+    return response.data;
+  },
+
+  /**
+   * Link account via service provider (open banking)
+   */
+  linkAccount: async (customerId: string, providerLogin: any) => {
+    console.log(`🔗 Linking account for customer: ${customerId}`);
+    const response = await apiClient.post(`/customer/${customerId}/account-logins`, providerLogin);
+    console.log('✅ Account login created');
+    return response.data;
+  },
+};
+
+// Manual Account API
+export const manualAccountApi = {
+  /**
+   * Create a manual account
+   */
+  createManualAccount: async (customerId: string, accountData: any) => {
+    console.log(`✍️ Creating manual account for customer: ${customerId}`);
+    const response = await apiClient.post(`/customer/${customerId}/manual-accounts`, accountData);
+    console.log('✅ Manual account created');
+    return response.data;
+  },
+
+  /**
+   * Update an existing manual account
+   */
+  updateManualAccount: async (customerId: string, accountId: string, accountData: any) => {
+    console.log(`✍️ Updating manual account: ${accountId}`);
+    const response = await apiClient.put(`/customer/${customerId}/manual-accounts/${accountId}`, accountData);
+    console.log('✅ Manual account updated');
+    return response.data;
+  },
+
+  /**
+   * Delete a manual account
+   */
+  deleteManualAccount: async (customerId: string, accountId: string) => {
+    console.log(`🗑️ Deleting manual account: ${accountId}`);
+    const response = await apiClient.delete(`/customer/${customerId}/manual-accounts/${accountId}`);
+    console.log('✅ Manual account deleted');
     return response.data;
   },
 };

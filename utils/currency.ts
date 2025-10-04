@@ -1,9 +1,16 @@
 // Currency Conversion and Money Formatting Utilities
+// Matches Flutter implementation: lib/core/utils/currency_conversion_utils.dart
 
 import { Money, ExchangeRate } from '../types';
 
 /**
- * Convert amount from one currency to another using exchange rates
+ * Convert amount from one currency to another using cross-rate calculations
+ *
+ * Works with exchange rates regardless of the base currency used by the API.
+ * To convert from one currency to another, we use the formula:
+ * convertedAmount = amount * (toCurrencyRate / fromCurrencyRate)
+ *
+ * Matches Flutter: CurrencyConversionUtils.convertAmount()
  */
 export function convertCurrency(
   amount: number,
@@ -12,64 +19,39 @@ export function convertCurrency(
   exchangeRates: ExchangeRate[],
   date: string | null = null
 ): number | null {
-  // Same currency, no conversion needed
-  if (fromCurrency === toCurrency) {
-    return amount;
-  }
-
   // Zero amount
   if (amount === 0) {
     return 0;
   }
 
-  // Filter rates by date if provided
-  const rates = date ? filterRatesByDate(exchangeRates, date) : exchangeRates;
+  // Same currency, no conversion needed (case-insensitive)
+  if (fromCurrency.toLowerCase() === toCurrency.toLowerCase()) {
+    return amount;
+  }
 
-  // Get rates for both currencies
-  const fromRate = rates.find(r => r.currency === fromCurrency);
-  const toRate = rates.find(r => r.currency === toCurrency);
+  // Get rates for the specific date (or current rates)
+  const dateFilteredRates = filterRatesByDate(exchangeRates, date);
 
-  if (!fromRate || !toRate) {
-    console.error(`Missing exchange rate for ${fromCurrency} or ${toCurrency}`);
+  // Get rates for both currencies (case-insensitive)
+  const fromRate = getRateForCurrency(dateFilteredRates, fromCurrency);
+  const toRate = getRateForCurrency(dateFilteredRates, toCurrency);
+
+  if (fromRate === null || toRate === null) {
+    // Silent failure like Flutter - return null instead of logging error
     return null;
   }
 
-  // Cross-rate formula
-  const convertedAmount = amount * (toRate.rate / fromRate.rate);
+  // Formula: amount * (toRate / fromRate)
+  const convertedAmount = amount * (toRate / fromRate);
 
   return convertedAmount;
 }
 
 /**
- * Filter exchange rates by date
- */
-function filterRatesByDate(rates: ExchangeRate[], date: string): ExchangeRate[] {
-  const targetDate = new Date(date).toISOString().split('T')[0];
-
-  // For historical dates, get exact match
-  if (isHistoricalDate(date)) {
-    return rates.filter(r => r.date === targetDate);
-  }
-
-  // For current/future dates, get most recent rate for each currency
-  const latestRates: { [currency: string]: ExchangeRate } = {};
-  for (const rate of rates) {
-    if (!latestRates[rate.currency] || rate.date > latestRates[rate.currency].date) {
-      latestRates[rate.currency] = rate;
-    }
-  }
-
-  return Object.values(latestRates);
-}
-
-function isHistoricalDate(date: string): boolean {
-  const inputDate = new Date(date);
-  const now = new Date();
-  return inputDate < now;
-}
-
-/**
- * Convert Money object to target currency
+ * Convert Money object to specified target currency
+ *
+ * Returns new Money object in target currency, or original if conversion fails
+ * Matches Flutter: CurrencyConversionUtils.convertToTargetCurrency()
  */
 export function convertMoney(
   money: Money,
@@ -77,27 +59,111 @@ export function convertMoney(
   exchangeRates: ExchangeRate[],
   date: string | null = null
 ): Money | null {
-  if (!money || !money.currency || money.amount === undefined) {
+  if (!money || !money.currencyCode || money.amount === undefined) {
     return null;
+  }
+
+  // Already in target currency (case-insensitive)
+  if (money.currencyCode.toUpperCase() === toCurrency.toUpperCase()) {
+    return money;
   }
 
   const convertedAmount = convertCurrency(
     money.amount,
-    money.currency,
+    money.currencyCode,
     toCurrency,
     exchangeRates,
     date
   );
 
   if (convertedAmount === null) {
-    return null;
+    return money; // Return original if conversion fails (like Flutter)
   }
 
   return {
     amount: convertedAmount,
-    currency: toCurrency,
+    currencyCode: toCurrency,
     debitOrCredit: money.debitOrCredit
   };
+}
+
+/**
+ * Check if we have the necessary rates to perform a conversion
+ *
+ * Returns true if conversion is possible
+ * Matches Flutter: CurrencyConversionUtils.canConvert()
+ */
+export function canConvert(
+  fromCurrency: string,
+  toCurrency: string,
+  exchangeRates: ExchangeRate[],
+  date: string | null = null
+): boolean {
+  // Same currency (case-insensitive)
+  if (fromCurrency.toLowerCase() === toCurrency.toLowerCase()) {
+    return true;
+  }
+
+  const dateFilteredRates = filterRatesByDate(exchangeRates, date);
+  const fromRate = getRateForCurrency(dateFilteredRates, fromCurrency);
+  const toRate = getRateForCurrency(dateFilteredRates, toCurrency);
+
+  return fromRate !== null && toRate !== null;
+}
+
+/**
+ * Get exchange rate for a specific currency from the rates list
+ *
+ * Returns the rate for the currency, or null if not found
+ * Matches Flutter: CurrencyConversionUtils._getRateForCurrency()
+ */
+function getRateForCurrency(
+  rates: ExchangeRate[],
+  currency: string
+): number | null {
+  const currencyLower = currency.toLowerCase();
+
+  // Find the rate for the specified currency (case-insensitive)
+  const rate = rates.find(r => r.currency.toLowerCase() === currencyLower);
+
+  return rate?.rate ?? null;
+}
+
+/**
+ * Filter exchange rates by date
+ *
+ * For current rates (date = null), get the most recent rates for each currency
+ * For historical rates, get rates that match the specified date
+ *
+ * Matches Flutter: CurrencyConversionUtils._filterRatesByDate()
+ */
+function filterRatesByDate(
+  rates: ExchangeRate[],
+  date: string | null
+): ExchangeRate[] {
+  if (!date || date === '') {
+    // For current rates, get the most recent rates for each currency
+    const latestRates: { [currency: string]: ExchangeRate } = {};
+
+    for (const rate of rates) {
+      const currency = rate.currency.toLowerCase();
+      const existing = latestRates[currency];
+
+      if (!existing) {
+        latestRates[currency] = rate;
+      } else if (rate.date && existing.date) {
+        // Compare dates - keep the newer one
+        if (rate.date > existing.date) {
+          latestRates[currency] = rate;
+        }
+      }
+    }
+
+    return Object.values(latestRates);
+  } else {
+    // For historical rates, get rates for the specific date
+    return rates.filter(r => r.date === date);
+  }
 }
 
 /**

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Aggregate, CustomerInfo } from '../types';
 import { customerApi } from '../services/api';
+import { postLoginDataService } from '../services/postLoginDataService';
 
 interface AppContextType {
   // Auth state
@@ -13,6 +14,7 @@ interface AppContextType {
   aggregate: Aggregate | null;
   customerInfo: CustomerInfo | null;
   loading: boolean;
+  loadingPhase: 'critical' | 'realtime' | 'background' | 'complete' | null;
   error: string | null;
 
   // Actions
@@ -30,18 +32,48 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [aggregate, setAggregate] = useState<Aggregate | null>(null);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingPhase, setLoadingPhase] = useState<'critical' | 'realtime' | 'background' | 'complete' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Check authentication on mount
   useEffect(() => {
-    const sessionToken = localStorage.getItem('sessionToken');
-    const storedCustomerId = localStorage.getItem('customerId');
+    const sessionToken = sessionStorage.getItem('sessionToken');
+    const storedCustomerId = sessionStorage.getItem('customerId');
 
     if (sessionToken && storedCustomerId) {
       setIsAuthenticated(true);
       setCustomerId(storedCustomerId);
+
+      // Try to load cached exchange rates immediately for faster initial render
+      const cachedRates = localStorage.getItem('EXCHANGE_RATES');
+      if (cachedRates && aggregate) {
+        try {
+          const rates = JSON.parse(cachedRates);
+          setAggregate({ ...aggregate, exchangeRates: rates });
+        } catch (error) {
+          console.warn('Failed to load cached rates on mount');
+        }
+      }
+
       loadAggregate(storedCustomerId);
     }
+
+    // Listen for SignalR aggregate updates
+    const handleAggregateUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log('📊 AppContext: Aggregate update event received', customEvent.detail);
+
+      // Refresh aggregate with delta sync
+      if (storedCustomerId) {
+        refreshAggregate();
+      }
+    };
+
+    window.addEventListener('aggregateUpdated', handleAggregateUpdate);
+
+    return () => {
+      window.removeEventListener('aggregateUpdated', handleAggregateUpdate);
+    };
   }, []);
 
   const setAuthenticated = (isAuth: boolean, custId?: string) => {
@@ -60,9 +92,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const data = await customerApi.getAggregate(id);
+      // Phase 1: Critical data (includes exchange rates)
+      setLoadingPhase('critical');
+      const data = await postLoginDataService.fetchCriticalData(id);
+
+      // Load exchange rates from localStorage (fetched in Phase 0 of postLoginDataService)
+      const cachedRates = localStorage.getItem('EXCHANGE_RATES');
+      if (cachedRates) {
+        try {
+          data.exchangeRates = JSON.parse(cachedRates);
+        } catch (error) {
+          console.warn('Failed to parse cached exchange rates:', error);
+        }
+      }
+
       setAggregate(data);
       setCustomerInfo(data.customerInfo);
+
+      // Update supported currencies in CurrencyContext
+      const defaultCurrency = data.customerInfo?.defaultCurrencyCode || data.profile?.baseCurrency;
+      if (data.supportedCurrencies && data.baseCurrency && (window as any).__updateSupportedCurrencies) {
+        (window as any).__updateSupportedCurrencies(data.supportedCurrencies, data.baseCurrency, defaultCurrency);
+      } else if (data.profile?.supportedCurrencies && data.profile?.baseCurrency && (window as any).__updateSupportedCurrencies) {
+        (window as any).__updateSupportedCurrencies(data.profile.supportedCurrencies, data.profile.baseCurrency, defaultCurrency);
+      }
+
+      // Phase 2: Real-time setup
+      setLoadingPhase('realtime');
+      await postLoginDataService.setupRealTimeConnection();
+
+      // Phase 3: Background fetch (non-blocking)
+      setLoadingPhase('background');
+      postLoginDataService.fetchBackgroundData(id);
+
+      setLoadingPhase('complete');
     } catch (err: any) {
       setError(err.message || 'Failed to load data');
       console.error('Failed to load aggregate:', err);
@@ -92,14 +155,49 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    console.log('🚪 Logging out...');
+
+    // 1. Disconnect SignalR before logging out
+    try {
+      const { getSignalRService } = await import('../services/signalRService');
+      const signalRService = getSignalRService();
+      await signalRService.unsubscribe();
+      console.log('✅ SignalR disconnected');
+    } catch (error) {
+      console.warn('⚠️ Failed to disconnect SignalR:', error);
+    }
+
+    // 2. Call API logout endpoint (following Flutter implementation)
+    try {
+      const { authApi } = await import('../services/api');
+      await authApi.logout();
+      console.log('✅ API logout successful');
+    } catch (error) {
+      console.warn('⚠️ API logout failed (continuing with local logout):', error);
+    }
+
+    // 3. Clear local state
     setIsAuthenticated(false);
     setCustomerId(null);
     setAggregate(null);
     setCustomerInfo(null);
-    localStorage.removeItem('sessionToken');
-    localStorage.removeItem('requestToken');
-    localStorage.removeItem('customerId');
+
+    // 4. Clear session storage (tokens cleared by authApi.logout, but ensure complete cleanup)
+    sessionStorage.removeItem('sessionToken');
+    sessionStorage.removeItem('requestToken');
+    sessionStorage.removeItem('customerId');
+
+    // 5. Clear aggregate timestamp to prevent using previous user's data
+    localStorage.removeItem('SERVER_TIMESTAMP');
+    localStorage.removeItem('ACCOUNT_BALANCE_UPDATED_SINCE');
+
+    console.log('✅ Logout complete');
+
+    // 6. Redirect to login page
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
   };
 
   return (
@@ -110,6 +208,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         aggregate,
         customerInfo,
         loading,
+        loadingPhase,
         error,
         setAuthenticated,
         loadAggregate,

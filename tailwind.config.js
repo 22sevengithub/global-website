@@ -11,8 +11,8 @@ module.exports = {
     extend: {
       colors: {
         vault: {
-          // Softer green palette
-          green: '#00D66E',
+          // Brand colors from Vault22
+          green: '#73dd73',
           'green-light': '#4ADE80',
           'green-dark': '#059669',
           // From live site: Yellow accent
@@ -20,10 +20,11 @@ module.exports = {
           'yellow-light': '#FFF203',
           'yellow-dark': '#FFB800',
           // Supporting colors
-          blue: '#0066FF',
+          blue: '#26b1c9',
           'blue-dark': '#004499',
           'blue-gradient-start': '#0052CC',
           'blue-gradient-end': '#00CCCC',
+          pink: '#e84eb8',
           black: '#0F0F16',
           white: '#FFFFFF',
           gray: {
