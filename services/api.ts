@@ -6,7 +6,7 @@ import { getPlatformInfo, getDeviceInfo } from '../utils/platform';
 // API Configuration
 // Using proxy to avoid CORS issues: Browser → Next.js API Route → Real API
 const USE_PROXY = typeof window !== 'undefined'; // Use proxy in browser, direct in server
-const API_BASE_URL = USE_PROXY ? '/api/proxy' : (process.env.NEXT_PUBLIC_API_URL || 'https://api-global.dev.vault22.io');
+const API_BASE_URL = USE_PROXY ? '/api/v1' : (process.env.NEXT_PUBLIC_API_URL || 'https://api-global.dev.vault22.io');
 const SIGNALR_URL = process.env.NEXT_PUBLIC_SIGNALR_URL || 'https://steph.develop.my227.net';
 
 // Create axios instance
