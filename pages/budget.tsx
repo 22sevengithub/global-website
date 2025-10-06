@@ -4,7 +4,7 @@ import LoadingAnimation from '../components/LoadingAnimation';
 import Link from 'next/link';
 import { useApp } from '../contexts/AppContext';
 import { useCurrency } from '../contexts/CurrencyContext';
-import { getCurrentPayPeriod, getDaysRemainingInPeriod, formatPayPeriodForDisplay, getStartDateOfPayPeriod, getEndDateOfPayPeriod } from '../utils/payPeriod';
+import { getCurrentPayPeriod, getDaysRemainingInPeriod, formatPayPeriod, getStartDateOfPayPeriod, getEndDateOfPayPeriod } from '../utils/payPeriod';
 import { getBudgetBreakdown, calculateBudgetProgress, getBudgetAlertLevel, getTotalBudgetForPeriod } from '../utils/budget';
 import { formatMoney } from '../utils/currency';
 
@@ -105,8 +105,8 @@ export default function Budget() {
       const spendingGroup = aggregate.spendingGroups.find(sg => sg.id === category?.spendingGroupId);
       return {
         ...ct,
-        categoryName: category?.name || 'Uncategorized',
-        spendingGroupName: spendingGroup?.name || 'Other',
+        categoryName: category?.description || 'Uncategorized',
+        spendingGroupName: spendingGroup?.description || 'Other',
         budgetAmount: getBudgetAmount(ct)
       };
     })

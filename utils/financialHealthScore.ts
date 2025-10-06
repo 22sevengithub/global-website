@@ -60,7 +60,7 @@ function calculateSavingsScore(accounts: Account[], monthlyIncome: number): numb
     a.accountClass === 'Bank' && a.accountType?.toLowerCase().includes('savings')
   );
 
-  const totalSavings = savingsAccounts.reduce((sum, acc) => sum + acc.currentBalance.amount, 0);
+  const totalSavings = savingsAccounts.reduce((sum, acc) => sum + (acc.currentBalance?.amount || 0), 0);
 
   let score = 0;
 
@@ -99,7 +99,7 @@ function calculateInsuranceScore(accounts: Account[]): number {
  */
 function calculateInvestmentScore(accounts: Account[], goals: Goal[]): number {
   const investmentAccounts = accounts.filter(a => a.accountClass === 'Investment');
-  const totalInvestments = investmentAccounts.reduce((sum, acc) => sum + acc.currentBalance.amount, 0);
+  const totalInvestments = investmentAccounts.reduce((sum, acc) => sum + (acc.currentBalance?.amount || 0), 0);
 
   let score = 0;
 
@@ -134,7 +134,7 @@ function calculateDebtScore(accounts: Account[], monthlyIncome: number): number 
   );
 
   const totalDebt = debtAccounts.reduce((sum, acc) => {
-    const balance = acc.currentBalance.amount;
+    const balance = acc.currentBalance?.amount || 0;
     return sum + (balance < 0 ? Math.abs(balance) : 0);
   }, 0);
 

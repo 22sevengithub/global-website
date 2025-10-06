@@ -143,7 +143,7 @@ export default function Investments() {
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
-                            <h3 className="font-bold text-vault-black dark:text-white">{account.accountName}</h3>
+                            <h3 className="font-bold text-vault-black dark:text-white">{account.name}</h3>
                             <span className="text-lg font-bold text-vault-black dark:text-white">{formatMoney(converted, currency)}</span>
                           </div>
                           <div className="flex items-center justify-between">
@@ -263,8 +263,8 @@ export default function Investments() {
                       <span className="text-vault-gray-600 dark:text-vault-gray-400">{formatMoney(convertedCurrentAmount, currency)}</span>
                       <span className="font-semibold text-vault-black dark:text-white">/ {formatMoney(convertedTargetAmount, currency)}</span>
                     </div>
-                    {goal.productName && (
-                      <p className="mt-2 text-xs text-vault-gray-500">Product: {goal.productName}</p>
+                    {goal.productId && (
+                      <p className="mt-2 text-xs text-vault-gray-500">Investment Product</p>
                     )}
                   </div>
                 );
