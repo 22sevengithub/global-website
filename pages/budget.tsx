@@ -1,5 +1,6 @@
 import AppLayout from '../components/AppLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
+import LoadingAnimation from '../components/LoadingAnimation';
 import Link from 'next/link';
 import { useApp } from '../contexts/AppContext';
 import { useCurrency } from '../contexts/CurrencyContext';
@@ -16,10 +17,7 @@ export default function Budget() {
       <ProtectedRoute>
         <AppLayout title="Budget | Vault22">
           <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-vault-green mb-4"></div>
-              <p className="text-vault-gray-600 dark:text-vault-gray-400">Loading budget...</p>
-            </div>
+            <LoadingAnimation size={200} />
           </div>
         </AppLayout>
       </ProtectedRoute>

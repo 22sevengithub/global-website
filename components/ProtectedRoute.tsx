@@ -1,8 +1,9 @@
 // Protected Route Component - Requires Authentication
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useApp } from '../contexts/AppContext';
+import LoadingAnimation from './LoadingAnimation';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,23 +11,33 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter();
-  const { isAuthenticated, loading } = useApp();
+  const { isAuthenticated } = useApp();
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    // If not authenticated and not loading, redirect to login
-    if (!isAuthenticated && !loading) {
+    // Quick auth check - just verify session exists
+    const sessionToken = sessionStorage.getItem('sessionToken');
+
+    if (!sessionToken) {
       router.push('/login');
     }
-  }, [isAuthenticated, loading, router]);
 
-  // Show loading state while checking authentication
-  if (loading) {
+    // Stop showing loading screen after quick check
+    setChecking(false);
+  }, [router]);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!checking && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, checking, router]);
+
+  // Show brief loading state only during initial auth check
+  if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-vault-gray-50 dark:bg-vault-gray-900">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-vault-green"></div>
-          <p className="mt-4 text-vault-gray-600 dark:text-vault-gray-400">Loading...</p>
-        </div>
+        <LoadingAnimation size={200} />
       </div>
     );
   }
@@ -36,6 +47,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     return null;
   }
 
-  // Render protected content
+  // Render protected content (individual pages handle data loading)
   return <>{children}</>;
 }

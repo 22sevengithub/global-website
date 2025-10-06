@@ -1,4 +1,5 @@
 import Layout from '../components/Layout';
+import LoadingAnimation from '../components/LoadingAnimation';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useApp } from '../contexts/AppContext';
@@ -249,8 +250,8 @@ export default function Login() {
                       className="w-full py-4 bg-vault-green text-vault-black dark:text-white font-bold rounded-xl hover:bg-vault-green-light transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading ? (
-                        <div className="flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-vault-black dark:border-white mr-2"></div>
+                        <div className="flex items-center justify-center gap-2">
+                          <LoadingAnimation size={24} />
                           Signing in...
                         </div>
                       ) : (
@@ -289,8 +290,8 @@ export default function Login() {
                       className="w-full py-4 bg-vault-green text-vault-black dark:text-white font-bold rounded-xl hover:bg-vault-green-light transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading ? (
-                        <div className="flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-vault-black dark:border-white mr-2"></div>
+                        <div className="flex items-center justify-center gap-2">
+                          <LoadingAnimation size={24} />
                           Sending OTP...
                         </div>
                       ) : (
@@ -325,8 +326,8 @@ export default function Login() {
                       className="w-full py-4 bg-vault-green text-vault-black dark:text-white font-bold rounded-xl hover:bg-vault-green-light transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading ? (
-                        <div className="flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-vault-black dark:border-white mr-2"></div>
+                        <div className="flex items-center justify-center gap-2">
+                          <LoadingAnimation size={24} />
                           Verifying...
                         </div>
                       ) : (

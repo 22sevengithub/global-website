@@ -117,7 +117,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         (window as any).__updateSupportedCurrencies(data.profile.supportedCurrencies, data.profile.baseCurrency, defaultCurrency);
       }
 
-      // Phase 2: Real-time setup
+      // Stop blocking loading - allow UI to render with critical data
+      setLoading(false);
+
+      // Phase 2: Real-time setup (background)
       setLoadingPhase('realtime');
       await postLoginDataService.setupRealTimeConnection();
 
@@ -129,7 +132,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (err: any) {
       setError(err.message || 'Failed to load data');
       console.error('Failed to load aggregate:', err);
-    } finally {
       setLoading(false);
     }
   };
@@ -158,45 +160,67 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     console.log('🚪 Logging out...');
 
-    // 1. Disconnect SignalR before logging out
     try {
-      const { getSignalRService } = await import('../services/signalRService');
-      const signalRService = getSignalRService();
-      await signalRService.unsubscribe();
-      console.log('✅ SignalR disconnected');
+      // 1. Disconnect SignalR first
+      try {
+        const { getSignalRService } = await import('../services/signalRService');
+        const signalRService = getSignalRService();
+        await signalRService.unsubscribe();
+        console.log('✅ SignalR disconnected');
+      } catch (error) {
+        console.warn('⚠️ Failed to disconnect SignalR:', error);
+      }
+
+      // 2. Call API logout endpoint
+      try {
+        const { authApi } = await import('../services/api');
+        await authApi.logout();
+        console.log('✅ API logout successful');
+      } catch (error) {
+        console.warn('⚠️ API logout failed (continuing with local logout):', error);
+      }
+
+      // 3. Clear all local state
+      setIsAuthenticated(false);
+      setCustomerId(null);
+      setAggregate(null);
+      setCustomerInfo(null);
+      setLoading(false);
+      setLoadingPhase(null);
+      setError(null);
+
+      // 4. Clear all session storage
+      sessionStorage.clear();
+
+      // 5. Clear all cached data from localStorage (keep theme preference)
+      const theme = localStorage.getItem('theme');
+      const itemsToKeep = ['theme'];
+
+      Object.keys(localStorage).forEach(key => {
+        if (!itemsToKeep.includes(key)) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      // Restore theme if it existed
+      if (theme) {
+        localStorage.setItem('theme', theme);
+      }
+
+      console.log('✅ Logout complete - all data cleared');
+
+      // 6. Small delay for smooth UI transition, then redirect
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
     } catch (error) {
-      console.warn('⚠️ Failed to disconnect SignalR:', error);
-    }
-
-    // 2. Call API logout endpoint (following Flutter implementation)
-    try {
-      const { authApi } = await import('../services/api');
-      await authApi.logout();
-      console.log('✅ API logout successful');
-    } catch (error) {
-      console.warn('⚠️ API logout failed (continuing with local logout):', error);
-    }
-
-    // 3. Clear local state
-    setIsAuthenticated(false);
-    setCustomerId(null);
-    setAggregate(null);
-    setCustomerInfo(null);
-
-    // 4. Clear session storage (tokens cleared by authApi.logout, but ensure complete cleanup)
-    sessionStorage.removeItem('sessionToken');
-    sessionStorage.removeItem('requestToken');
-    sessionStorage.removeItem('customerId');
-
-    // 5. Clear aggregate timestamp to prevent using previous user's data
-    localStorage.removeItem('SERVER_TIMESTAMP');
-    localStorage.removeItem('ACCOUNT_BALANCE_UPDATED_SINCE');
-
-    console.log('✅ Logout complete');
-
-    // 6. Redirect to login page
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login';
+      console.error('❌ Logout error:', error);
+      // Force redirect even on error
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
     }
   };
 

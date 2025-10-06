@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import CurrencySelector from './CurrencySelector';
+import LoadingAnimation from './LoadingAnimation';
 
 export default function Header() {
   const router = useRouter();
@@ -10,6 +11,7 @@ export default function Header() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [mounted, setMounted] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -32,6 +34,7 @@ export default function Header() {
   };
 
   const handleLogoutConfirm = async () => {
+    setLoggingOut(true);
     setShowLogoutModal(false);
     await logout();
   };
@@ -224,6 +227,16 @@ export default function Header() {
                 Yes, Logout
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Logout Loading Screen */}
+      {loggingOut && (
+        <div className="fixed inset-0 bg-vault-gray-50 dark:bg-vault-gray-900 flex items-center justify-center z-[70]">
+          <div className="text-center">
+            <LoadingAnimation size={200} />
+            <p className="mt-6 text-vault-gray-600 dark:text-vault-gray-400 text-lg">Logging out...</p>
           </div>
         </div>
       )}

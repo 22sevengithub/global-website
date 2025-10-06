@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Layout from '../components/Layout';
+import LoadingAnimation from '../components/LoadingAnimation';
 
 interface FAQ {
   id: number;
@@ -199,7 +200,7 @@ export default function FAQ() {
           {/* FAQ List */}
           {loading && (
             <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-vault-green"></div>
+              <LoadingAnimation size={120} />
             </div>
           )}
 
