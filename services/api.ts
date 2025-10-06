@@ -4,9 +4,9 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import { getPlatformInfo, getDeviceInfo } from '../utils/platform';
 
 // API Configuration
-// Using proxy to avoid CORS issues: Browser → Next.js API Route → Real API
-const USE_PROXY = typeof window !== 'undefined'; // Use proxy in browser, direct in server
-const API_BASE_URL = USE_PROXY ? '/api/v1' : (process.env.NEXT_PUBLIC_API_URL || 'https://api-global.dev.vault22.io');
+// For static export (S3), we call the API directly (CORS must be configured on API server)
+// For development with Next.js server, we can use proxy routes
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api-global.dev.vault22.io';
 const SIGNALR_URL = process.env.NEXT_PUBLIC_SIGNALR_URL || 'https://steph.develop.my227.net';
 
 // Create axios instance
