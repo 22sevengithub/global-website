@@ -11,7 +11,7 @@ export default function LoadingAnimation({ size = 120, className = '' }: Loading
   const { rive, RiveComponent } = useRive({
     src: '/animations/vault22_logo_animations.riv',
     autoplay: true,
-    loop: true,
+    stateMachines: 'State Machine 1',
     layout: new Layout({
       fit: Fit.Contain,
       alignment: Alignment.Center,

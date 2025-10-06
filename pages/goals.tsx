@@ -186,12 +186,12 @@ export default function Goals() {
                     </div>
                   </div>
 
-                  {goal.productName && (
+                  {goal.productId && (
                     <div className="mb-4 p-3 bg-vault-green/10 rounded-xl border border-vault-green/20">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-xs text-vault-gray-600 dark:text-vault-gray-400 mb-1">Invested in</p>
-                          <p className="text-sm font-semibold text-vault-black dark:text-white">{goal.productName}</p>
+                          <p className="text-sm font-semibold text-vault-black dark:text-white">Investment Product</p>
                         </div>
                         <span className="text-xl">📈</span>
                       </div>

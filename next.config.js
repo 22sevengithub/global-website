@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Removed 'output: export' to enable API routes for proxy
+  output: 'export', // Enable static export for S3 deployment
   images: {
     unoptimized: true,
     domains: ['localhost', 'strapi'],

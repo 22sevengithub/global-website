@@ -46,7 +46,7 @@ export default function Transactions() {
 
       return (
         merchant?.name.toLowerCase().includes(searchLower) ||
-        category?.name.toLowerCase().includes(searchLower) ||
+        category?.description.toLowerCase().includes(searchLower) ||
         t.description?.toLowerCase().includes(searchLower)
       );
     }
@@ -56,8 +56,8 @@ export default function Transactions() {
 
   // Sort by date (most recent first)
   filteredTransactions = filteredTransactions.sort((a, b) => {
-    const dateA = new Date(a.date || a.transactionDate || 0).getTime();
-    const dateB = new Date(b.date || b.transactionDate || 0).getTime();
+    const dateA = new Date(a.transactionDate || 0).getTime();
+    const dateB = new Date(b.transactionDate || 0).getTime();
     return dateB - dateA; // Descending order (newest first)
   });
 
@@ -82,7 +82,7 @@ export default function Transactions() {
       'Dining': '☕',
       'Health': '💪'
     };
-    return icons[category?.name || ''] || '💼';
+    return icons[category?.description || ''] || '💼';
   };
 
   return (
@@ -189,28 +189,28 @@ export default function Transactions() {
                         <td className="px-6 py-4">
                           <div className="flex items-center">
                             <div className="w-10 h-10 bg-vault-gray-100 dark:bg-vault-gray-600 rounded-full flex items-center justify-center text-xl mr-3">
-                              {getCategoryIcon(transaction.categoryId)}
+                              {getCategoryIcon(transaction.categoryId || '')}
                             </div>
                             <div>
                               <p className="font-semibold text-vault-black dark:text-white">
                                 {merchant?.name || transaction.description || 'Unknown'}
                               </p>
                               <p className="text-xs text-vault-gray-500">
-                                {transaction.isSplit ? 'Split Transaction' : 'Regular'}
+                                {transaction.isManual ? 'Manual' : 'Regular'}
                               </p>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <span className="px-3 py-1 bg-vault-gray-100 dark:bg-vault-gray-600 text-vault-gray-700 dark:text-vault-gray-300 rounded-full text-sm font-medium">
-                            {category?.name || 'Uncategorized'}
+                            {category?.description || 'Uncategorized'}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-vault-gray-700 dark:text-vault-gray-300">
-                          {account?.accountName || 'Unknown'}
+                          {account?.name || 'Unknown'}
                         </td>
                         <td className="px-6 py-4 text-sm text-vault-gray-700 dark:text-vault-gray-300">
-                          {new Date(transaction.date).toLocaleDateString()}
+                          {new Date(transaction.transactionDate).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 text-right">
                           <span className={`font-bold text-lg ${isIncome ? 'text-vault-green' : 'text-vault-black dark:text-white'}`}>

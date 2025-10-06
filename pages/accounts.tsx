@@ -81,7 +81,7 @@ export default function Accounts() {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await accountApi.refresh();
+      // Refresh aggregate data instead
       await loadAggregate();
     } catch (error) {
       console.error('Failed to refresh accounts:', error);
@@ -207,8 +207,8 @@ export default function Accounts() {
                 className="bg-white dark:bg-vault-gray-800 p-6 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700 hover:border-vault-green hover:shadow-lg transition-all cursor-pointer group"
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div className={`w-12 h-12 ${getAccountColor(account.accountType)} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform p-2`}>
-                    <img src={getAccountIcon(account.accountType)} alt={account.accountType} className="w-full h-full object-contain" />
+                  <div className={`w-12 h-12 ${getAccountColor(account.accountType || '')} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform p-2`}>
+                    <img src={getAccountIcon(account.accountType || '')} alt={account.accountType || 'account'} className="w-full h-full object-contain" />
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -222,7 +222,7 @@ export default function Accounts() {
                     </button>
                   </div>
                 </div>
-                <h3 className="text-lg font-bold text-vault-black dark:text-white mb-1">{account.accountName}</h3>
+                <h3 className="text-lg font-bold text-vault-black dark:text-white mb-1">{account.name}</h3>
                 <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400 mb-4">{account.accountType}</p>
                 <div className="flex items-center justify-between">
                   <div>
@@ -231,8 +231,8 @@ export default function Accounts() {
                       {formatMoney(displayBalance, currency)}
                     </p>
                   </div>
-                  <div className={`px-3 py-1 rounded-full text-xs font-semibold ${account.isActive ? 'bg-vault-green/20 text-vault-green' : 'bg-vault-gray-200 dark:bg-vault-gray-600 text-vault-gray-600 dark:text-vault-gray-400'}`}>
-                    {account.isActive ? 'active' : 'inactive'}
+                  <div className={`px-3 py-1 rounded-full text-xs font-semibold ${!account.deactivated ? 'bg-vault-green/20 text-vault-green' : 'bg-vault-gray-200 dark:bg-vault-gray-600 text-vault-gray-600 dark:text-vault-gray-400'}`}>
+                    {!account.deactivated ? 'active' : 'inactive'}
                   </div>
                 </div>
               </div>

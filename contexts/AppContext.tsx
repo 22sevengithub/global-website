@@ -141,7 +141,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     try {
       // Get deltas since last update
-      const lastUpdated = aggregate?.customerInfo?.updatedAt;
+      const lastUpdated = (aggregate as any)?.customerInfo?.updatedAt;
       const data = await customerApi.getAggregate(
         customerId,
         lastUpdated,
