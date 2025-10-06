@@ -3,53 +3,64 @@ import Layout from '../components/Layout';
 export default function Contact() {
   return (
     <Layout title="Contact Us | Vault22">
-      <section className="bg-gradient-hero text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold font-display mb-6">
+      <section className="relative bg-gradient-to-br from-white via-vault-green-50 to-white py-16 md:py-20 overflow-hidden">
+        <div className="absolute inset-0 opacity-45">
+          <img
+            src="/images/backgrounds/hero-contact.jpg"
+            alt=""
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/45 to-vault-green-50/50" />
+        </div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center px-3 py-1.5 bg-vault-green-50 border border-vault-green-100 rounded-full mb-6">
+            <span className="text-xs font-medium text-vault-green-900">Contact Us</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-display text-vault-black mb-5 leading-tight">
             Get In Touch
           </h1>
-          <p className="text-2xl">
+          <p className="text-base md:text-lg text-vault-gray-600 max-w-2xl mx-auto leading-relaxed">
             We are here to help you start your journey to financial freedom
           </p>
         </div>
       </section>
 
-      <section className="py-24 bg-white">
+      <section className="py-12 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-vault-gray-50 rounded-2xl p-12 text-center">
-            <div className="text-6xl mb-6">📧</div>
-            <h2 className="text-3xl font-bold font-display text-vault-black mb-4">
+          <div className="bg-white rounded-xl p-8 text-center border border-vault-gray-200 shadow-sm">
+            <div className="text-4xl mb-4">📧</div>
+            <h2 className="text-xl font-bold font-display text-vault-black mb-2">
               Email Us
             </h2>
-            <p className="text-xl text-vault-gray-600 mb-8">
+            <p className="text-sm text-vault-gray-600 mb-5">
               For inquiries, support, or partnership opportunities
             </p>
             <a
               href="mailto:hello@vault22.io"
-              className="inline-block px-8 py-4 bg-vault-green text-vault-black rounded-full font-bold text-lg hover:bg-vault-green-light transition-all"
+              className="inline-block px-6 py-2.5 bg-vault-green text-white rounded-lg font-semibold text-sm hover:bg-vault-green-dark transition-colors shadow-sm hover:shadow-md"
             >
               hello@vault22.io
             </a>
           </div>
 
-          <div className="mt-16 grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            <div className="text-center p-6 bg-vault-green/5 rounded-xl border-2 border-vault-green">
-              <div className="text-4xl mb-4">🇿🇦</div>
-              <h3 className="font-bold text-vault-black mb-2">South Africa</h3>
-              <p className="text-vault-gray-600">
+          <div className="mt-10 grid md:grid-cols-2 gap-5 max-w-3xl mx-auto">
+            <div className="text-center p-5 bg-white rounded-lg border border-vault-gray-200 hover:border-vault-gray-300 hover:shadow-sm transition-all">
+              <div className="text-3xl mb-2.5">🇿🇦</div>
+              <h3 className="font-semibold text-vault-black mb-1.5 text-sm">South Africa</h3>
+              <p className="text-xs text-vault-gray-600 mb-2.5">
                 Our established home market
               </p>
-              <span className="inline-block mt-2 px-3 py-1 bg-vault-green text-vault-black text-xs font-semibold rounded-full">
+              <span className="inline-block px-2 py-0.5 bg-vault-green-50 text-vault-green text-xs font-medium rounded-full">
                 Available Now
               </span>
             </div>
-            <div className="text-center p-6 bg-vault-green/5 rounded-xl border-2 border-vault-green">
-              <div className="text-4xl mb-4">🇦🇪</div>
-              <h3 className="font-bold text-vault-black mb-2">UAE</h3>
-              <p className="text-vault-gray-600">
+            <div className="text-center p-5 bg-white rounded-lg border border-vault-gray-200 hover:border-vault-gray-300 hover:shadow-sm transition-all">
+              <div className="text-3xl mb-2.5">🇦🇪</div>
+              <h3 className="font-semibold text-vault-black mb-1.5 text-sm">UAE</h3>
+              <p className="text-xs text-vault-gray-600 mb-2.5">
                 Now live in the United Arab Emirates
               </p>
-              <span className="inline-block mt-2 px-3 py-1 bg-vault-green text-vault-black text-xs font-semibold rounded-full">
+              <span className="inline-block px-2 py-0.5 bg-vault-green-50 text-vault-green text-xs font-medium rounded-full">
                 Now Live
               </span>
             </div>

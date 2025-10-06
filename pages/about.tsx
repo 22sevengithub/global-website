@@ -8,21 +8,30 @@ export default function About() {
       description="Learn about Vault22's mission to make wealth a process, not a privilege. Discover our expansion from South Africa to UAE."
     >
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-vault-blue to-vault-blue-dark text-white py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl">
-            <h1 className="text-5xl md:text-6xl font-bold font-display mb-6">
-              Designed to Support You
-            </h1>
-            <p className="text-2xl text-white/90 leading-relaxed">
-              We're on a mission to make financial freedom attainable for all. Through innovative technology and expert guidance, we empower individuals to build, grow, and protect their wealth globally.
-            </p>
+      <section className="relative bg-gradient-to-br from-white via-vault-green-50 to-white py-16 md:py-20 overflow-hidden">
+        <div className="absolute inset-0 opacity-55">
+          <img
+            src="/images/backgrounds/vault22-top-image.jpg"
+            alt=""
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-vault-green-50/40 to-white/35" />
+        </div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center px-3 py-1.5 bg-vault-green-50 border border-vault-green-100 rounded-full mb-6">
+            <span className="text-xs font-medium text-vault-green-900">About Vault22</span>
           </div>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-display text-vault-black mb-5 leading-tight">
+            Designed to Support You
+          </h1>
+          <p className="text-base md:text-lg text-vault-gray-600 max-w-2xl mx-auto leading-relaxed">
+            We're on a mission to make financial freedom attainable for all. Through innovative technology and expert guidance, we empower individuals to build, grow, and protect their wealth globally.
+          </p>
         </div>
       </section>
 
       {/* Mission & Values */}
-      <section className="py-24 bg-white">
+      <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-16 items-center mb-24">
             <div>
@@ -118,7 +127,7 @@ export default function About() {
       </section>
 
       {/* Global Expansion Section */}
-      <section id="global" className="py-24 bg-vault-black text-white">
+      <section id="global" className="py-16 bg-vault-black text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="inline-block px-4 py-2 bg-vault-green/20 rounded-full text-vault-green font-semibold mb-6">
@@ -161,7 +170,7 @@ export default function About() {
       </section>
 
       {/* Regional Focus Section */}
-      <section id="regions" className="py-24 bg-white">
+      <section id="regions" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold font-display text-vault-black mb-6">
@@ -340,17 +349,17 @@ export default function About() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-primary text-white">
+      <section className="py-16 bg-vault-black text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold font-display mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold font-display mb-3">
             Ready to Join Our Global Community?
           </h2>
-          <p className="text-xl text-white/90 mb-12">
+          <p className="text-sm text-vault-gray-300 mb-6">
             Start your journey to financial freedom with Vault22 today
           </p>
           <Link
             href="/contact"
-            className="inline-block px-8 py-4 bg-vault-yellow text-vault-black rounded-full font-bold text-lg hover:bg-vault-yellow-light transition-all hover:shadow-xl transform hover:-translate-y-1"
+            className="inline-block px-6 py-2.5 bg-vault-green text-white rounded-lg font-semibold text-sm hover:bg-vault-green-dark transition-colors shadow-sm hover:shadow-md"
           >
             Get Started Today
           </Link>

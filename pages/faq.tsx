@@ -58,13 +58,24 @@ export default function FAQ() {
       description="Find answers to your questions about Vault22's products, services, and features. Get help with savings, investments, and financial management."
     >
       {/* Hero Section */}
-      <section className="bg-gradient-hero text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative bg-gradient-to-br from-white via-vault-green-50 to-white py-16 md:py-20 overflow-hidden">
+        <div className="absolute inset-0 opacity-40">
+          <img
+            src="/images/backgrounds/hero-faq.jpg"
+            alt=""
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-vault-green-50/40" />
+        </div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-5xl md:text-6xl font-bold font-display mb-6">
+            <div className="inline-flex items-center px-3 py-1.5 bg-vault-green-50 border border-vault-green-100 rounded-full mb-6">
+              <span className="text-xs font-medium text-vault-green-900">Help Centre</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-display text-vault-black mb-5 leading-tight">
               How Can We Help You?
             </h1>
-            <p className="text-xl text-white/90 mb-8">
+            <p className="text-base md:text-lg text-vault-gray-600 max-w-2xl mx-auto leading-relaxed mb-6">
               Find answers to your questions about Vault22
             </p>
 
@@ -73,12 +84,12 @@ export default function FAQ() {
               <input
                 type="search"
                 placeholder="Search for answers..."
-                className="w-full px-6 py-4 rounded-full text-vault-black placeholder-vault-gray-400 shadow-lg focus:outline-none focus:ring-4 focus:ring-vault-green focus:ring-opacity-50"
+                className="w-full px-5 py-3.5 rounded-lg text-vault-black placeholder-vault-gray-400 bg-white border border-vault-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-vault-green focus:border-vault-green"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <svg
-                className="absolute right-6 top-1/2 transform -translate-y-1/2 h-5 w-5 text-vault-gray-400"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-vault-gray-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -91,96 +102,96 @@ export default function FAQ() {
       </section>
 
       {/* Browse by Topic */}
-      <section className="py-16 bg-vault-gray-50">
+      <section className="py-12 bg-white border-b border-vault-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold font-display text-vault-black mb-10 text-center">
+          <h2 className="text-2xl font-bold font-display text-vault-black mb-6 text-center">
             Browse by Topic
           </h2>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-12">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
             <button
               onClick={() => setSelectedCategory('Getting Started')}
-              className={`p-6 rounded-2xl transition-all hover:scale-105 ${
+              className={`p-4 rounded-lg transition-colors ${
                 selectedCategory === 'Getting Started'
-                  ? 'bg-blue-100 border-2 border-blue-300 shadow-lg'
-                  : 'bg-blue-50 border-2 border-blue-100 hover:border-blue-200'
+                  ? 'bg-vault-green-50 border border-vault-green text-vault-green'
+                  : 'bg-white border border-vault-gray-200 hover:border-vault-green'
               }`}
             >
-              <div className="text-4xl mb-3">🚀</div>
-              <h3 className="font-bold text-vault-black text-sm">Getting Started</h3>
+              <div className="text-3xl mb-2">🚀</div>
+              <h3 className="font-semibold text-vault-black text-xs">Getting Started</h3>
             </button>
 
             <button
               onClick={() => setSelectedCategory('Account Management')}
-              className={`p-6 rounded-2xl transition-all hover:scale-105 ${
+              className={`p-4 rounded-lg transition-colors ${
                 selectedCategory === 'Account Management'
-                  ? 'bg-green-100 border-2 border-green-300 shadow-lg'
-                  : 'bg-green-50 border-2 border-green-100 hover:border-green-200'
+                  ? 'bg-vault-green-50 border border-vault-green text-vault-green'
+                  : 'bg-white border border-vault-gray-200 hover:border-vault-green'
               }`}
             >
-              <div className="text-4xl mb-3">👤</div>
-              <h3 className="font-bold text-vault-black text-sm">Account Management</h3>
+              <div className="text-3xl mb-2">👤</div>
+              <h3 className="font-semibold text-vault-black text-xs">Account</h3>
             </button>
 
             <button
               onClick={() => setSelectedCategory('Security')}
-              className={`p-6 rounded-2xl transition-all hover:scale-105 ${
+              className={`p-4 rounded-lg transition-colors ${
                 selectedCategory === 'Security'
-                  ? 'bg-purple-100 border-2 border-purple-300 shadow-lg'
-                  : 'bg-purple-50 border-2 border-purple-100 hover:border-purple-200'
+                  ? 'bg-vault-green-50 border border-vault-green text-vault-green'
+                  : 'bg-white border border-vault-gray-200 hover:border-vault-green'
               }`}
             >
-              <div className="text-4xl mb-3">🔒</div>
-              <h3 className="font-bold text-vault-black text-sm">Security</h3>
+              <div className="text-3xl mb-2">🔒</div>
+              <h3 className="font-semibold text-vault-black text-xs">Security</h3>
             </button>
 
             <button
               onClick={() => setSelectedCategory('Billing')}
-              className={`p-6 rounded-2xl transition-all hover:scale-105 ${
+              className={`p-4 rounded-lg transition-colors ${
                 selectedCategory === 'Billing'
-                  ? 'bg-orange-100 border-2 border-orange-300 shadow-lg'
-                  : 'bg-orange-50 border-2 border-orange-100 hover:border-orange-200'
+                  ? 'bg-vault-green-50 border border-vault-green text-vault-green'
+                  : 'bg-white border border-vault-gray-200 hover:border-vault-green'
               }`}
             >
-              <div className="text-4xl mb-3">💳</div>
-              <h3 className="font-bold text-vault-black text-sm">Billing</h3>
+              <div className="text-3xl mb-2">💳</div>
+              <h3 className="font-semibold text-vault-black text-xs">Billing</h3>
             </button>
 
             <button
               onClick={() => setSelectedCategory('Features')}
-              className={`p-6 rounded-2xl transition-all hover:scale-105 ${
+              className={`p-4 rounded-lg transition-colors ${
                 selectedCategory === 'Features'
-                  ? 'bg-yellow-100 border-2 border-yellow-300 shadow-lg'
-                  : 'bg-yellow-50 border-2 border-yellow-100 hover:border-yellow-200'
+                  ? 'bg-vault-green-50 border border-vault-green text-vault-green'
+                  : 'bg-white border border-vault-gray-200 hover:border-vault-green'
               }`}
             >
-              <div className="text-4xl mb-3">⭐</div>
-              <h3 className="font-bold text-vault-black text-sm">Features</h3>
+              <div className="text-3xl mb-2">⭐</div>
+              <h3 className="font-semibold text-vault-black text-xs">Features</h3>
             </button>
 
             <button
               onClick={() => setSelectedCategory('Troubleshooting')}
-              className={`p-6 rounded-2xl transition-all hover:scale-105 ${
+              className={`p-4 rounded-lg transition-colors ${
                 selectedCategory === 'Troubleshooting'
-                  ? 'bg-pink-100 border-2 border-pink-300 shadow-lg'
-                  : 'bg-pink-50 border-2 border-pink-100 hover:border-pink-200'
+                  ? 'bg-vault-green-50 border border-vault-green text-vault-green'
+                  : 'bg-white border border-vault-gray-200 hover:border-vault-green'
               }`}
             >
-              <div className="text-4xl mb-3">🔧</div>
-              <h3 className="font-bold text-vault-black text-sm">Troubleshooting</h3>
+              <div className="text-3xl mb-2">🔧</div>
+              <h3 className="font-semibold text-vault-black text-xs">Troubleshooting</h3>
             </button>
           </div>
 
           {/* Category Pills */}
-          <div className="flex flex-wrap gap-3 justify-center">
+          <div className="flex flex-wrap gap-2 justify-center">
             {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-6 py-3 rounded-full text-sm font-semibold transition-all ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   selectedCategory === category
-                    ? 'bg-vault-green text-vault-black shadow-lg'
-                    : 'bg-white text-vault-gray-700 hover:bg-vault-gray-100 border border-vault-gray-200'
+                    ? 'bg-vault-green text-white'
+                    : 'bg-white text-vault-gray-700 hover:bg-vault-gray-50 border border-vault-gray-200'
                 }`}
               >
                 {category === 'all' ? 'All Topics' : category}
@@ -191,9 +202,9 @@ export default function FAQ() {
       </section>
 
       {/* Main Content */}
-      <section className="py-16 bg-white">
+      <section className="py-12 bg-vault-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold font-display text-vault-black mb-8">
+          <h2 className="text-xl font-bold font-display text-vault-black mb-6">
             Frequently Asked Questions
           </h2>
 
@@ -205,13 +216,13 @@ export default function FAQ() {
           )}
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
 
           {!loading && !error && filteredFAQs.length === 0 && (
-            <div className="text-center py-12 text-vault-gray-500">
+            <div className="text-center py-12 text-vault-gray-500 text-sm">
               {searchQuery
                 ? `No results found for "${searchQuery}"`
                 : 'No FAQs available in this category'
@@ -219,26 +230,26 @@ export default function FAQ() {
             </div>
           )}
 
-          <div className="space-y-4 max-w-4xl mx-auto">
+          <div className="space-y-3 max-w-4xl mx-auto">
             {filteredFAQs.map((faq) => (
               <div
                 key={faq.id}
-                className={`bg-white rounded-xl shadow-sm border overflow-hidden transition-all ${
-                  expandedFaq === faq.id ? 'border-vault-green shadow-lg' : 'border-vault-gray-200 hover:border-vault-green/50'
+                className={`bg-white rounded-lg border overflow-hidden transition-colors ${
+                  expandedFaq === faq.id ? 'border-vault-green' : 'border-vault-gray-200 hover:border-vault-green'
                 }`}
               >
                 <button
                   onClick={() => setExpandedFaq(expandedFaq === faq.id ? null : faq.id)}
-                  className="w-full px-6 py-5 text-left flex items-center justify-between hover:bg-vault-gray-50 dark:hover:bg-vault-gray-600 transition-colors"
+                  className="w-full px-5 py-4 text-left flex items-center justify-between hover:bg-vault-gray-50 dark:hover:bg-vault-gray-800 transition-colors"
                 >
-                  <h3 className="text-lg font-semibold text-vault-black pr-4">
+                  <h3 className="text-base font-semibold text-vault-black pr-4">
                     {faq.attributes.question}
                   </h3>
-                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                    expandedFaq === faq.id ? 'bg-vault-green text-vault-black' : 'bg-vault-gray-100 text-vault-gray-400'
+                  <div className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+                    expandedFaq === faq.id ? 'bg-vault-green text-white' : 'bg-vault-gray-100 text-vault-gray-400'
                   }`}>
                     <svg
-                      className={`h-5 w-5 transform transition-transform ${
+                      className={`h-4 w-4 transform transition-transform ${
                         expandedFaq === faq.id ? 'rotate-180' : ''
                       }`}
                       fill="none"
@@ -251,10 +262,10 @@ export default function FAQ() {
                 </button>
 
                 {expandedFaq === faq.id && (
-                  <div className="px-6 pb-6 border-t border-vault-gray-100">
-                    <div className="prose prose-sm max-w-none mt-4">
+                  <div className="px-5 pb-4 border-t border-vault-gray-100">
+                    <div className="prose prose-sm max-w-none mt-3">
                       <div
-                        className="text-vault-gray-700 leading-relaxed"
+                        className="text-sm text-vault-gray-700 leading-relaxed"
                         dangerouslySetInnerHTML={{
                           __html: faq.attributes.answer
                             .split('\n')
@@ -265,15 +276,15 @@ export default function FAQ() {
                               if (line.match(/^["\-\*]/)) {
                                 return `<li class="ml-4 mb-2">${line.substring(1).trim()}</li>`;
                               }
-                              return line ? `<p class="mb-3">${line}</p>` : '';
+                              return line ? `<p class="mb-2">${line}</p>` : '';
                             })
                             .join('')
-                            .replace(/(<li.*?<\/li>)+/g, '<ol class="list-decimal list-inside space-y-2 my-3">$&</ol>')
+                            .replace(/(<li.*?<\/li>)+/g, '<ol class="list-decimal list-inside space-y-2 my-2">$&</ol>')
                         }}
                       />
                     </div>
-                    <div className="mt-4">
-                      <span className="inline-block px-3 py-1 text-xs font-medium text-vault-green bg-vault-green/10 rounded-full">
+                    <div className="mt-3">
+                      <span className="inline-block px-2.5 py-1 text-xs font-medium text-vault-green bg-vault-green-50 rounded-full">
                         {faq.attributes.category}
                       </span>
                     </div>
@@ -286,17 +297,17 @@ export default function FAQ() {
       </section>
 
       {/* Still Need Help */}
-      <section className="py-16 bg-gradient-primary text-white">
+      <section className="py-12 bg-vault-black text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold font-display mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold font-display mb-3">
             Still Need Help?
           </h2>
-          <p className="text-lg text-white/90 mb-8">
+          <p className="text-sm text-vault-gray-300 mb-6">
             Can't find what you're looking for? Our support team is here to help.
           </p>
           <a
             href="/contact"
-            className="inline-block px-8 py-4 bg-vault-yellow text-vault-black rounded-full font-bold text-lg hover:bg-vault-yellow-light transition-all hover:shadow-xl transform hover:-translate-y-1"
+            className="inline-block px-6 py-2.5 bg-vault-green text-white rounded-lg font-semibold text-sm hover:bg-vault-green-dark transition-colors shadow-sm hover:shadow-md"
           >
             Contact Support
           </a>
