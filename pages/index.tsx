@@ -205,7 +205,7 @@ export default function Home() {
 
               <Link
                 href="/about#global"
-                className="inline-flex items-center px-6 py-3 bg-vault-green text-white rounded-lg font-semibold text-base hover:bg-vault-green-dark transition-all"
+                className="inline-flex items-center px-6 py-3 bg-vault-green text-white rounded-lg font-semibold text-base hover:bg-vault-green-dark transition-all shadow-sm hover:shadow-md"
               >
                 Learn More About Our Global Vision
                 <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

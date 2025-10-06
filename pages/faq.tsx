@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import Layout from '../components/Layout';
+import LoadingAnimation from '../components/LoadingAnimation';
 
 interface FAQ {
   id: number;
@@ -210,7 +211,7 @@ export default function FAQ() {
           {/* FAQ List */}
           {loading && (
             <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-vault-green"></div>
+              <LoadingAnimation size={120} />
             </div>
           )}
 
@@ -239,7 +240,7 @@ export default function FAQ() {
               >
                 <button
                   onClick={() => setExpandedFaq(expandedFaq === faq.id ? null : faq.id)}
-                  className="w-full px-5 py-4 text-left flex items-center justify-between hover:bg-vault-gray-50 transition-colors"
+                  className="w-full px-5 py-4 text-left flex items-center justify-between hover:bg-vault-gray-50 dark:hover:bg-vault-gray-800 transition-colors"
                 >
                   <h3 className="text-base font-semibold text-vault-black pr-4">
                     {faq.attributes.question}

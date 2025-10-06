@@ -1,9 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './contexts/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
     extend: {
@@ -24,6 +26,9 @@ module.exports = {
           blue: '#2196F3',
           'blue-dark': '#1565C0',
           'blue-light': '#42A5F5',
+          'blue-gradient-start': '#0052CC',
+          'blue-gradient-end': '#00CCCC',
+          pink: '#e84eb8',
           black: '#0A0A0A',
           white: '#FFFFFF',
           gray: {
