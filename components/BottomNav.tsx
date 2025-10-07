@@ -16,14 +16,17 @@ export default function BottomNav({ items }: BottomNavProps) {
   const router = useRouter();
 
   const isActive = (path: string) => {
-    // Handle special case for More tab
+    // Handle special case for Menu/More tab
     if (path === '/app/more') {
       return router.pathname === '/app/more' ||
              router.pathname === '/app/goals' ||
              router.pathname === '/app/investments' ||
              router.pathname === '/app/health-score' ||
              router.pathname === '/app/profile' ||
-             router.pathname === '/app/settings';
+             router.pathname === '/app/settings' ||
+             router.pathname === '/app/notifications' ||
+             router.pathname === '/app/currency-settings' ||
+             router.pathname === '/app/investment-style';
     }
     return router.pathname === path;
   };
@@ -47,15 +50,12 @@ export default function BottomNav({ items }: BottomNavProps) {
                     : 'w-8 h-8 bg-transparent'
                 }`}
               >
-                <Icon
-                  name={item.icon}
-                  size={24}
-                  className={`transition-opacity ${
-                    active
-                      ? 'opacity-100'
-                      : 'opacity-60 group-hover:opacity-100'
-                  }`}
-                />
+                <div className={`transition-opacity ${active ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'} dark:invert`}>
+                  <Icon
+                    name={item.icon}
+                    size={24}
+                  />
+                </div>
               </div>
               <span
                 className={`text-[9px] font-medium mt-0.5 transition-colors leading-tight text-center ${

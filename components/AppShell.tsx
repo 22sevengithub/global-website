@@ -43,11 +43,11 @@ export default function AppShell({
 
   // Bottom navigation items (5 tabs like Flutter app)
   const bottomNavItems = [
-    { href: '/app/dashboard', label: 'Dashboard', icon: 'dashboard' },
-    { href: '/app/accounts', label: 'Accounts', icon: 'accounts' },
-    { href: '/app/transactions', label: 'Tracking', icon: 'credit' },
-    { href: '/app/budget', label: 'Budget', icon: 'cash' },
-    { href: '/app/more', label: 'More', icon: 'ic_setting' },
+    { href: '/app/dashboard', label: 'Home', icon: 'v22Logo' },
+    { href: '/app/accounts', label: 'Portfolio', icon: 'acc' },
+    { href: '/app/transactions', label: 'Transactions', icon: 'tracking' },
+    { href: '/app/budget', label: 'Budget', icon: 'budget' },
+    { href: '/app/more', label: 'Menu', icon: 'ic_menu' },
   ];
 
   // NOTE: Auto-logout removed - users must explicitly confirm exit via More page

@@ -277,7 +277,11 @@ export default function GoalSetup() {
                 value={targetDate}
                 onChange={(e) => setTargetDate(e.target.value)}
                 min={getMinimumDate()}
-                className="w-full px-4 py-3 border-2 border-vault-gray-200 dark:border-vault-gray-700 dark:bg-vault-gray-800 dark:text-white rounded-xl focus:border-vault-green focus:outline-none transition-all"
+                className="w-full px-4 py-3 border-2 border-vault-gray-200 dark:border-vault-gray-700 dark:bg-vault-gray-800 dark:text-white rounded-xl focus:border-vault-green focus:outline-none transition-all [color-scheme:light] dark:[color-scheme:dark]"
+                style={{
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                }}
               />
               {errors.targetDate && <p className="text-red-500 text-sm mt-2">{errors.targetDate}</p>}
               <p className="text-xs text-vault-gray-500 mt-2">Minimum: 7 months from today</p>

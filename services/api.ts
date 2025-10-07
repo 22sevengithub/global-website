@@ -273,6 +273,58 @@ export const customerApi = {
     });
     return response.data;
   },
+
+  /**
+   * Update first name (legal name)
+   */
+  updateFirstName: async (customerId: string, firstname: string) => {
+    const response = await apiClient.put(`/customer/${customerId}/legal-first-names`, {
+      name: firstname,
+    });
+    return response.data;
+  },
+
+  /**
+   * Update surname
+   */
+  updateSurname: async (customerId: string, surname: string) => {
+    const response = await apiClient.put(`/customer/${customerId}/surname`, {
+      surname,
+    });
+    return response.data;
+  },
+
+  /**
+   * Update address details
+   */
+  updateAddress: async (customerId: string, address: {
+    line1?: string;
+    line2?: string;
+    suburb?: string;
+    streetNumber?: string;
+    road?: string;
+    province?: string;
+    city?: string;
+    postalCode?: string;
+    country?: string;
+  }) => {
+    const response = await apiClient.put(`/customer/${customerId}/address-details`, address);
+    return response.data;
+  },
+
+  /**
+   * Update notification subscriptions
+   */
+  updateNotificationSubscriptions: async (customerId: string, subscriptions: {
+    isSpendingAlertsEnabled?: string;
+    isAccountUpdateEnabled?: string;
+    isUnseenTransactionEnabled?: string;
+    isNudgesEnabled?: string;
+    isGeneralEnabled?: string;
+  }) => {
+    const response = await apiClient.put(`/customer/${customerId}/notificationSubscriptions`, subscriptions);
+    return response.data;
+  },
 };
 
 // Account Functions
@@ -372,6 +424,43 @@ export const budgetApi = {
     const response = await apiClient.put(`/customer/${customerId}/trackedCategories`, {
       trackedCategories,
     });
+    return response.data;
+  },
+};
+
+// Investment Style Functions
+export const investmentStyleApi = {
+  /**
+   * Get current investment style
+   */
+  getCurrentStyle: async (customerId: string) => {
+    const response = await apiClient.get(`/customer/${customerId}/investment-style`);
+    return response.data;
+  },
+
+  /**
+   * Get available investment style options
+   */
+  getStyleOptions: async (customerId: string) => {
+    const response = await apiClient.get(`/customer/${customerId}/investment-style/options`);
+    return response.data;
+  },
+
+  /**
+   * Update investment style
+   */
+  updateStyle: async (customerId: string, styleId: string) => {
+    const response = await apiClient.put(`/customer/${customerId}/investment-style`, {
+      investmentStyleId: styleId,
+    });
+    return response.data;
+  },
+
+  /**
+   * Remove investment style
+   */
+  removeStyle: async (customerId: string) => {
+    const response = await apiClient.delete(`/customer/${customerId}/investment-style`);
     return response.data;
   },
 };

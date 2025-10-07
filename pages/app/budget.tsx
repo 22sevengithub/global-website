@@ -44,17 +44,17 @@ export default function Budget() {
       <ProtectedRoute>
         <AppShell title="Budget | Vault22">
           <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center max-w-md">
-              <div className="text-6xl mb-6">💰</div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-thanos-50 mb-4">
+            <div className="text-center max-w-md animate-scale-in">
+              <div className="text-6xl mb-6 animate-fade-in-down">💰</div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-thanos-50 mb-4 animate-stagger-1">
                 No Budget Data Yet
               </h2>
-              <p className="text-gray-600 dark:text-thanos-200 mb-6">
+              <p className="text-gray-600 dark:text-thanos-200 mb-6 animate-stagger-2">
                 {!hasAccounts
                   ? "Connect your accounts to start tracking your budget."
                   : "Your budget data is being calculated. Check back soon!"}
               </p>
-              <Link href={!hasAccounts ? "/app/accounts" : "/app/dashboard"} className="px-6 py-3 bg-yellow text-gray-900 dark:text-thanos-900 rounded-full font-semibold hover:bg-pikachu-400 transition-all inline-block">
+              <Link href={!hasAccounts ? "/app/accounts" : "/app/dashboard"} className="px-6 py-3 bg-yellow text-gray-900 dark:text-thanos-900 rounded-full font-semibold hover:bg-pikachu-400 transition-all duration-200 inline-block animate-stagger-3 hover:scale-105 hover:shadow-lg">
                 {!hasAccounts ? "Connect Accounts" : "Go to Dashboard"}
               </Link>
             </div>
@@ -126,7 +126,7 @@ export default function Budget() {
     <ProtectedRoute>
       <AppShell title="Budget | Vault22">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 animate-fade-in-down">
           <h1 className="text-3xl font-bold font-display text-gray-900 dark:text-thanos-50 mb-2">
             Budget Management
           </h1>
@@ -135,14 +135,14 @@ export default function Budget() {
 
         {/* Budget Period & Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-bulbasaur-600 to-bulbasaur-800 p-6 rounded-2xl text-white border border-bulbasaur-500/30">
+          <div className="bg-gradient-to-br from-bulbasaur-600 to-bulbasaur-800 p-6 rounded-2xl text-white border border-bulbasaur-500/30 animate-stagger-1 hover:scale-105 transition-all duration-300 hover:shadow-lg">
             <p className="text-sm opacity-90 mb-2">Budget Period</p>
             <p className="text-2xl font-bold mb-1">
               {startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </p>
             <p className="text-sm opacity-75">{daysRemaining} days remaining</p>
           </div>
-          <div className="bg-gray-50 dark:bg-thanos-800 p-6 rounded-2xl border border-gray-200 dark:border-thanos-700">
+          <div className="bg-gray-50 dark:bg-thanos-800 p-6 rounded-2xl border border-gray-200 dark:border-thanos-700 animate-stagger-2 hover:scale-105 transition-all duration-300 hover:shadow-lg">
             <p className="text-sm text-gray-600 dark:text-thanos-200 mb-2">Total Budget</p>
             <p className="text-3xl font-bold text-gray-900 dark:text-thanos-50 mb-1">{formatMoney(totalBudget, currency)}</p>
             <div className="mt-3">
@@ -152,13 +152,13 @@ export default function Budget() {
               </div>
               <div className="w-full bg-gray-200 dark:bg-thanos-700 rounded-full h-2">
                 <div
-                  className={`h-2 rounded-full transition-all ${percentUsed > 90 ? 'bg-peach-500' : percentUsed > 75 ? 'bg-pikachu-500' : 'bg-yellow'}`}
+                  className={`h-2 rounded-full transition-all duration-300 ${percentUsed > 90 ? 'bg-peach-500' : percentUsed > 75 ? 'bg-pikachu-500' : 'bg-yellow'}`}
                   style={{ width: `${Math.min(percentUsed, 100)}%` }}
                 ></div>
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 dark:bg-thanos-800 p-6 rounded-2xl border border-gray-200 dark:border-thanos-700">
+          <div className="bg-gray-50 dark:bg-thanos-800 p-6 rounded-2xl border border-gray-200 dark:border-thanos-700 animate-stagger-3 hover:scale-105 transition-all duration-300 hover:shadow-lg">
             <p className="text-sm text-gray-600 dark:text-thanos-200 mb-2">Remaining</p>
             <p className="text-3xl font-bold text-kermit-600 dark:text-kermit-400 mb-1">{formatMoney(remaining, currency)}</p>
             <p className="text-sm text-gray-600 dark:text-thanos-200">
@@ -168,15 +168,19 @@ export default function Budget() {
         </div>
 
         {/* Spending Groups */}
-        <div className="bg-gray-50 dark:bg-thanos-800 p-6 rounded-2xl border border-gray-200 dark:border-thanos-700 mb-8">
+        <div className="bg-gray-50 dark:bg-thanos-800 p-6 rounded-2xl border border-gray-200 dark:border-thanos-700 mb-8 animate-stagger-4 hover:shadow-lg transition-all duration-300">
           <h2 className="text-xl font-bold text-gray-900 dark:text-thanos-50 mb-6">Spending Groups</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {budgetBreakdown.map((group) => {
+            {budgetBreakdown.map((group, index) => {
               const percentage = group.targetAmount > 0 ? (group.actualSpending / group.targetAmount) * 100 : 0;
               const icon = getSpendingGroupIcon(group.spendingGroupId);
               const color = getSpendingGroupColor(group.spendingGroupId);
               return (
-                <div key={group.spendingGroupId} className="p-4 bg-gray-200 dark:bg-thanos-700 rounded-xl border border-gray-300 dark:border-thanos-600">
+                <div
+                  key={group.spendingGroupId}
+                  className="p-4 bg-gray-200 dark:bg-thanos-700 rounded-xl border border-gray-300 dark:border-thanos-600 hover:scale-105 transition-all duration-200 hover:shadow-lg"
+                  style={{ animation: `fadeInUp 0.3s ease-out ${0.5 + index * 0.1}s both` }}
+                >
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-xl">{icon}</span>
                     <p className="text-sm font-semibold text-gray-900 dark:text-thanos-100">{group.spendingGroupName}</p>
@@ -187,7 +191,7 @@ export default function Budget() {
                   </div>
                   <div className="w-full bg-gray-300 dark:bg-thanos-600 rounded-full h-2">
                     <div
-                      className={`h-2 rounded-full transition-all ${percentage > 90 ? 'bg-peach-500' : percentage > 75 ? 'bg-pikachu-500' : 'bg-yellow'}`}
+                      className={`h-2 rounded-full transition-all duration-300 ${percentage > 90 ? 'bg-peach-500' : percentage > 75 ? 'bg-pikachu-500' : 'bg-yellow'}`}
                       style={{ width: `${Math.min(percentage, 100)}%` }}
                     ></div>
                   </div>
@@ -199,10 +203,10 @@ export default function Budget() {
         </div>
 
         {/* Category Budgets */}
-        <div className="bg-gray-50 dark:bg-thanos-800 p-6 rounded-2xl border border-gray-200 dark:border-thanos-700">
+        <div className="bg-gray-50 dark:bg-thanos-800 p-6 rounded-2xl border border-gray-200 dark:border-thanos-700 animate-stagger-5 hover:shadow-lg transition-all duration-300">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900 dark:text-thanos-50">Category Budgets</h2>
-            <button className="px-4 py-2 bg-yellow text-gray-900 dark:text-thanos-900 rounded-full font-semibold hover:bg-pikachu-400 transition-all">
+            <button className="px-4 py-2 bg-yellow text-gray-900 dark:text-thanos-900 rounded-full font-semibold hover:bg-pikachu-400 transition-all duration-200 hover:scale-105">
               Edit Budgets
             </button>
           </div>
@@ -214,10 +218,14 @@ export default function Budget() {
               const isWarning = alertLevel === 'warning-80';
 
               return (
-                <div key={category.id} className="pb-6 border-b border-gray-200 dark:border-thanos-700 last:border-0">
+                <div
+                  key={category.id}
+                  className="pb-6 border-b border-gray-200 dark:border-thanos-700 last:border-0"
+                  style={{ animation: `fadeInUp 0.3s ease-out ${0.6 + index * 0.1}s both` }}
+                >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center">
-                      <div className={`w-12 h-12 ${getCategoryColor(index)} rounded-xl flex items-center justify-center text-2xl mr-4`}>
+                      <div className={`w-12 h-12 ${getCategoryColor(index)} rounded-xl flex items-center justify-center text-2xl mr-4 hover:scale-110 transition-all duration-200`}>
                         {getCategoryIcon(category.categoryName)}
                       </div>
                       <div>
@@ -237,7 +245,7 @@ export default function Budget() {
                   <div className="relative">
                     <div className="w-full bg-gray-300 dark:bg-thanos-600 rounded-full h-3">
                       <div
-                        className={`h-3 rounded-full transition-all ${isOverBudget ? 'bg-peach-500' : isWarning ? 'bg-pikachu-500' : 'bg-yellow'}`}
+                        className={`h-3 rounded-full transition-all duration-300 ${isOverBudget ? 'bg-peach-500' : isWarning ? 'bg-pikachu-500' : 'bg-yellow'}`}
                         style={{ width: `${Math.min(percentage, 100)}%` }}
                       ></div>
                     </div>
@@ -274,7 +282,7 @@ export default function Budget() {
 
         {/* Budget Insights */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gradient-to-br from-sonic-100 to-bulbasaur-100 dark:from-sonic-900/40 dark:to-bulbasaur-900/40 p-6 rounded-2xl border border-sonic-200 dark:border-bulbasaur-700/40">
+          <div className="bg-gradient-to-br from-sonic-100 to-bulbasaur-100 dark:from-sonic-900/40 dark:to-bulbasaur-900/40 p-6 rounded-2xl border border-sonic-200 dark:border-bulbasaur-700/40 animate-stagger-6 hover:scale-105 transition-all duration-300 hover:shadow-lg">
             <div className="flex items-start">
               <span className="text-3xl mr-3">💡</span>
               <div>
@@ -288,7 +296,7 @@ export default function Budget() {
               </div>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-pikachu-100 to-garfield-100 dark:from-pikachu-900/30 dark:to-garfield-900/30 p-6 rounded-2xl border border-pikachu-200 dark:border-pikachu-700/40">
+          <div className="bg-gradient-to-br from-pikachu-100 to-garfield-100 dark:from-pikachu-900/30 dark:to-garfield-900/30 p-6 rounded-2xl border border-pikachu-200 dark:border-pikachu-700/40 hover:scale-105 transition-all duration-300 hover:shadow-lg" style={{ animation: 'fadeInUp 0.5s ease-out 0.7s both' }}>
             <div className="flex items-start">
               <span className="text-3xl mr-3">{percentUsed > 80 ? '⚠️' : '✅'}</span>
               <div>

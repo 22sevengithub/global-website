@@ -6,6 +6,26 @@ export interface Money {
   debitOrCredit: 'debit' | 'credit';
 }
 
+export interface Address {
+  line1?: string;
+  line2?: string;
+  suburb?: string;
+  streetNumber?: string;
+  road?: string;
+  province?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+}
+
+export interface NotificationSubscription {
+  isSpendingAlertsEnabled?: string | boolean;
+  isAccountUpdateEnabled?: string | boolean;
+  isUnseenTransactionEnabled?: string | boolean;
+  isNudgesEnabled?: string | boolean;
+  isGeneralEnabled?: string | boolean;
+}
+
 export interface CustomerInfo {
   id: string;
   ttsId: string;
@@ -23,6 +43,8 @@ export interface CustomerInfo {
   timezoneOffset: number;
   investmentStylePreference?: string;
   investorClassification?: string;
+  address?: Address;
+  notificationSubscription?: NotificationSubscription;
 }
 
 export interface Account {

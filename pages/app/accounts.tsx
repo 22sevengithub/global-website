@@ -94,7 +94,7 @@ export default function Accounts() {
     <ProtectedRoute>
       <AppShell title="Accounts | Vault22">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 animate-fade-in-down">
           <h1 className="text-3xl font-bold font-display text-vault-black dark:text-white mb-2">
             Accounts Overview
           </h1>
@@ -103,17 +103,17 @@ export default function Accounts() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-vault-green to-vault-green-dark p-6 rounded-2xl text-white">
+          <div className="bg-gradient-to-br from-vault-green to-vault-green-dark p-6 rounded-2xl text-white animate-stagger-1 hover:scale-105 transition-transform duration-300">
             <p className="text-sm opacity-90 mb-2">Total Assets</p>
             <p className="text-3xl font-bold mb-1">{formatMoney(netWorthData.totalAssets, currency)}</p>
             <p className="text-xs opacity-75">Across {assetsByType.length} types</p>
           </div>
-          <div className="bg-gradient-to-br from-red-500 to-red-600 p-6 rounded-2xl text-white">
+          <div className="bg-gradient-to-br from-red-500 to-red-600 p-6 rounded-2xl text-white animate-stagger-2 hover:scale-105 transition-transform duration-300">
             <p className="text-sm opacity-90 mb-2">Total Liabilities</p>
             <p className="text-3xl font-bold mb-1">{formatMoney(netWorthData.totalLiabilities, currency)}</p>
             <p className="text-xs opacity-75">Across {liabilitiesByType.length} types</p>
           </div>
-          <div className="bg-gradient-to-br from-vault-blue to-vault-blue-dark p-6 rounded-2xl text-white">
+          <div className="bg-gradient-to-br from-vault-blue to-vault-blue-dark p-6 rounded-2xl text-white animate-stagger-3 hover:scale-105 transition-transform duration-300">
             <p className="text-sm opacity-90 mb-2">Net Worth</p>
             <p className="text-3xl font-bold mb-1">{formatMoney(netWorthData.netWorth, currency)}</p>
             <p className="text-xs opacity-75 flex items-center">
@@ -126,11 +126,11 @@ export default function Accounts() {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 animate-stagger-4">
           <div className="flex gap-3">
             <button
               onClick={() => setActiveFilter('all')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                 activeFilter === 'all'
                   ? 'bg-vault-gray-200 dark:bg-vault-gray-600 text-vault-gray-700 dark:text-vault-gray-300'
                   : 'text-vault-gray-600 dark:text-vault-gray-400 hover:bg-vault-gray-100 dark:hover:bg-vault-gray-700'
@@ -140,7 +140,7 @@ export default function Accounts() {
             </button>
             <button
               onClick={() => setActiveFilter('banks')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                 activeFilter === 'banks'
                   ? 'bg-vault-gray-200 dark:bg-vault-gray-600 text-vault-gray-700 dark:text-vault-gray-300'
                   : 'text-vault-gray-600 dark:text-vault-gray-400 hover:bg-vault-gray-100 dark:hover:bg-vault-gray-700'
@@ -150,7 +150,7 @@ export default function Accounts() {
             </button>
             <button
               onClick={() => setActiveFilter('investments')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                 activeFilter === 'investments'
                   ? 'bg-vault-gray-200 dark:bg-vault-gray-600 text-vault-gray-700 dark:text-vault-gray-300'
                   : 'text-vault-gray-600 dark:text-vault-gray-400 hover:bg-vault-gray-100 dark:hover:bg-vault-gray-700'
@@ -160,7 +160,7 @@ export default function Accounts() {
             </button>
             <button
               onClick={() => setActiveFilter('crypto')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                 activeFilter === 'crypto'
                   ? 'bg-vault-gray-200 dark:bg-vault-gray-600 text-vault-gray-700 dark:text-vault-gray-300'
                   : 'text-vault-gray-600 dark:text-vault-gray-400 hover:bg-vault-gray-100 dark:hover:bg-vault-gray-700'
@@ -171,7 +171,7 @@ export default function Accounts() {
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-6 py-2 bg-vault-green text-vault-black dark:text-white rounded-full font-semibold hover:bg-vault-green-light transition-all hover:shadow-lg flex items-center"
+            className="px-6 py-2 bg-vault-green text-vault-black dark:text-white rounded-full font-semibold hover:bg-vault-green-light transition-all duration-200 hover:shadow-lg hover:scale-105 flex items-center"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -182,7 +182,7 @@ export default function Accounts() {
 
         {/* Accounts Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAccounts.map((account) => {
+          {filteredAccounts.map((account, index) => {
             // Get balance from have/owe like Flutter does
             const haveAmount = account.have?.amount || 0;
             const accountCurrency = account.currentBalance?.currencyCode || account.currencyCode || currency;
@@ -204,7 +204,10 @@ export default function Accounts() {
             return (
               <div
                 key={account.id}
-                className="bg-white dark:bg-vault-gray-800 p-6 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700 hover:border-vault-green hover:shadow-lg transition-all cursor-pointer group"
+                className="bg-white dark:bg-vault-gray-800 p-6 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700 hover:border-vault-green hover:shadow-lg transition-all duration-300 cursor-pointer group hover:scale-105"
+                style={{
+                  animation: `fadeInUp 0.3s ease-out ${0.5 + index * 0.1}s both`
+                }}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className={`w-12 h-12 ${getAccountColor(account.accountType || '')} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform p-2`}>
@@ -242,10 +245,10 @@ export default function Accounts() {
           {/* Add Account Card */}
           <button
             onClick={() => setShowAddModal(true)}
-            className="bg-vault-gray-50 dark:bg-vault-gray-700 border-2 border-dashed border-vault-gray-300 dark:border-vault-gray-600 p-6 rounded-2xl hover:border-vault-green hover:bg-vault-green/5 transition-all group"
+            className="bg-vault-gray-50 dark:bg-vault-gray-700 border-2 border-dashed border-vault-gray-300 dark:border-vault-gray-600 p-6 rounded-2xl hover:border-vault-green hover:bg-vault-green/5 transition-all duration-300 group hover:scale-105 animate-stagger-5"
           >
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="w-16 h-16 bg-vault-green/20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 bg-vault-green/20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200">
                 <svg className="w-8 h-8 text-vault-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
@@ -258,8 +261,8 @@ export default function Accounts() {
 
         {/* Add Account Modal (simplified) */}
         {showAddModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-vault-gray-800 rounded-2xl p-8 max-w-md w-full">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
+            <div className="bg-white dark:bg-vault-gray-800 rounded-2xl p-8 max-w-md w-full animate-scale-in">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-vault-black dark:text-white">Add Account</h2>
                 <button

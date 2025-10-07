@@ -10,6 +10,8 @@ import { formatMoney, convertCurrency } from '../../utils/currency';
 import { processTransactionFilters, getActiveFilterCount } from '../../utils/transactionFilters';
 import { TransactionFilterModel, createEmptyFilter } from '../../types/transactionFilters';
 import Icon from '../../components/Icon';
+import { getSpendingGroupIcon, getSpendingGroupColor } from '../../utils/spendingGroupIcons';
+import Image from 'next/image';
 
 export default function Transactions() {
   const { aggregate, customerInfo, loading } = useApp();
@@ -82,40 +84,25 @@ export default function Transactions() {
     .filter(t => t.amount.debitOrCredit === 'debit')
     .reduce((sum, t) => sum + Math.abs(t.amount.amount), 0);
 
-  // Get icon for category
-  const getCategoryIcon = (categoryId: string) => {
-    const category = aggregate.categories.find(c => c.id === categoryId);
-    const icons: Record<string, string> = {
-      'Groceries': '🛒',
-      'Transportation': '⛽',
-      'Income': '💰',
-      'Entertainment': '🎬',
-      'Shopping': '📦',
-      'Dining': '☕',
-      'Health': '💪'
-    };
-    return icons[category?.description || ''] || '💼';
-  };
-
   const activeFilterCount = getActiveFilterCount(filters);
 
   return (
     <ProtectedRoute>
       <AppShell title="Transactions | Vault22">
         {/* Header with Filter Button */}
-        <div className="mb-6">
+        <div className="mb-6 animate-fade-in-down">
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-3xl font-bold font-display text-gray-900 dark:text-thanos-50">
               Transactions
             </h1>
             <button
               onClick={() => setIsFilterModalOpen(true)}
-              className="relative flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-thanos-800 hover:bg-gray-200 dark:hover:bg-thanos-700 rounded-lg transition-colors"
+              className="relative flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-thanos-800 hover:bg-gray-200 dark:hover:bg-thanos-700 rounded-lg transition-all duration-300 hover:scale-105"
             >
               <Icon name="ic_setting" size={20} />
               <span className="font-medium text-gray-900 dark:text-thanos-50">Filters</span>
               {activeFilterCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow text-thanos-950 text-xs font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow text-thanos-950 text-xs font-bold rounded-full flex items-center justify-center animate-scale-in">
                   {activeFilterCount}
                 </span>
               )}
@@ -125,7 +112,7 @@ export default function Transactions() {
         </div>
 
         {/* Search Bar */}
-        <div className="mb-4">
+        <div className="mb-4 animate-stagger-1">
           <div className="relative">
             <svg
               className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-thanos-400"
@@ -145,7 +132,7 @@ export default function Transactions() {
               placeholder="Search transactions by merchant, category, amount..."
               value={filters.searchQuery || ''}
               onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
-              className="w-full pl-12 pr-4 py-3 border border-gray-200 dark:border-thanos-700 bg-white dark:bg-thanos-800 text-gray-900 dark:text-thanos-50 rounded-xl focus:ring-2 focus:ring-bulbasaur-500 focus:border-transparent transition-all"
+              className="w-full pl-12 pr-4 py-3 border border-gray-200 dark:border-thanos-700 bg-white dark:bg-thanos-800 text-gray-900 dark:text-thanos-50 rounded-xl focus:ring-2 focus:ring-bulbasaur-500 focus:border-transparent transition-all duration-300"
             />
           </div>
         </div>
@@ -159,18 +146,18 @@ export default function Transactions() {
         />
 
         {/* Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white dark:bg-vault-gray-800 p-6 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-stagger-2">
+          <div className="bg-white dark:bg-vault-gray-800 p-6 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700 transition-all duration-300 hover:scale-105 hover:shadow-lg">
             <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400 mb-2">Total Income</p>
             <p className="text-3xl font-bold text-vault-green">{formatMoney(totalIncome, currency)}</p>
             <p className="text-xs text-vault-gray-500 mt-1">{filteredTransactions.length} transactions</p>
           </div>
-          <div className="bg-white dark:bg-vault-gray-800 p-6 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700">
+          <div className="bg-white dark:bg-vault-gray-800 p-6 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700 transition-all duration-300 hover:scale-105 hover:shadow-lg">
             <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400 mb-2">Total Expenses</p>
             <p className="text-3xl font-bold text-red-500">{formatMoney(totalExpenses, currency)}</p>
             <p className="text-xs text-vault-gray-500 mt-1">{allTransactions.length} total</p>
           </div>
-          <div className="bg-white dark:bg-vault-gray-800 p-6 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700">
+          <div className="bg-white dark:bg-vault-gray-800 p-6 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700 transition-all duration-300 hover:scale-105 hover:shadow-lg">
             <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400 mb-2">Net Cash Flow</p>
             <p className="text-3xl font-bold text-vault-black dark:text-white">{formatMoney(totalIncome - totalExpenses, currency)}</p>
             <p className={`text-xs mt-1 ${totalIncome - totalExpenses > 0 ? 'text-vault-green' : 'text-red-500'}`}>
@@ -181,7 +168,7 @@ export default function Transactions() {
 
 
         {/* Transactions List */}
-        <div className="bg-white dark:bg-vault-gray-800 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700 overflow-hidden">
+        <div className="bg-white dark:bg-vault-gray-800 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700 overflow-hidden animate-stagger-3 transition-all duration-300 hover:shadow-lg">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-vault-gray-50 dark:bg-vault-gray-700 border-b border-vault-gray-200 dark:border-vault-gray-600">
@@ -201,18 +188,35 @@ export default function Transactions() {
                     </td>
                   </tr>
                 ) : (
-                  filteredTransactions.map((transaction) => {
+                  filteredTransactions.map((transaction, index) => {
                     const merchant = aggregate.merchants.find(m => m.id === transaction.merchantId);
                     const category = aggregate.categories.find(c => c.id === transaction.categoryId);
                     const account = aggregate.accounts.find(a => a.id === transaction.accountId);
                     const isIncome = transaction.amount.debitOrCredit === 'credit';
 
+                    // Get spending group icon and color
+                    const spendingGroupIcon = getSpendingGroupIcon(transaction.spendingGroupId);
+                    const spendingGroupColor = getSpendingGroupColor(transaction.spendingGroupId);
+
                     return (
-                      <tr key={transaction.id} className="hover:bg-vault-gray-50 dark:hover:bg-vault-gray-700 transition-all">
+                      <tr
+                        key={transaction.id}
+                        className="hover:bg-vault-gray-50 dark:hover:bg-vault-gray-700 transition-all duration-200"
+                        style={{ animation: `fadeInUp 0.3s ease-out ${0.5 + index * 0.1}s both` }}
+                      >
                         <td className="px-6 py-4">
                           <div className="flex items-center">
-                            <div className="w-10 h-10 bg-vault-gray-100 dark:bg-vault-gray-600 rounded-full flex items-center justify-center text-xl mr-3">
-                              {getCategoryIcon(transaction.categoryId || '')}
+                            <div
+                              className="w-10 h-10 rounded-full flex items-center justify-center mr-3 transition-all duration-300 hover:scale-110"
+                              style={{ backgroundColor: `${spendingGroupColor}15` }}
+                            >
+                              <Image
+                                src={spendingGroupIcon}
+                                alt="category"
+                                width={20}
+                                height={20}
+                                className="object-contain"
+                              />
                             </div>
                             <div>
                               <p className="font-semibold text-vault-black dark:text-white">
@@ -225,7 +229,13 @@ export default function Transactions() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="px-3 py-1 bg-vault-gray-100 dark:bg-vault-gray-600 text-vault-gray-700 dark:text-vault-gray-300 rounded-full text-sm font-medium">
+                          <span
+                            className="px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 hover:scale-105"
+                            style={{
+                              backgroundColor: `${spendingGroupColor}15`,
+                              color: spendingGroupColor
+                            }}
+                          >
                             {category?.description || 'Uncategorized'}
                           </span>
                         </td>
