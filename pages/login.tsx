@@ -84,8 +84,8 @@ export default function Login() {
         return;
       }
 
-      // Navigate to dashboard - data loading will continue in background
-      router.push('/dashboard');
+      // Navigate to app dashboard - data loading will continue in background
+      router.push('/app/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Invalid OTP. Please try again.');
       setOtp('');
@@ -123,7 +123,7 @@ export default function Login() {
       const response = await authApi.login(email, password);
 
       setAuthenticated(true, response.customerId);
-      router.push('/dashboard');
+      router.push('/app/dashboard');
     } catch (err: any) {
       console.error('Email login error:', err);
       setError(err.response?.data?.error || err.message || 'Invalid email or password');

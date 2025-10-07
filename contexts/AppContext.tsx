@@ -209,17 +209,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       console.log('✅ Logout complete - all data cleared');
 
-      // 6. Small delay for smooth UI transition, then redirect
+      // 6. Small delay for smooth UI transition, then redirect to homepage
       await new Promise(resolve => setTimeout(resolve, 500));
 
       if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+        window.location.href = '/';
       }
     } catch (error) {
       console.error('❌ Logout error:', error);
       // Force redirect even on error
       if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+        window.location.href = '/';
       }
     }
   };

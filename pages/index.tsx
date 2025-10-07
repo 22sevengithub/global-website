@@ -17,19 +17,19 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-vault-green-50/30 to-white/50" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-16 md:py-20">
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-20 md:py-24">
           <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center px-3 py-1.5 bg-vault-green-50 border border-vault-green-100 rounded-full mb-6">
+            <div className="inline-flex items-center px-3 py-1.5 bg-vault-green-50 border border-vault-green-100 rounded-full mb-8">
               <svg className="w-3.5 h-3.5 mr-1.5 text-vault-green" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z" clipRule="evenodd" />
               </svg>
               <span className="text-xs font-medium text-vault-green-900">Now Live in UAE • Global Banking Made Simple</span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-display mb-5 leading-tight text-vault-black">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-display mb-8 leading-tight text-vault-black">
               Make Wealth a Process,<br />Not a Privilege
             </h1>
-            <p className="text-base md:text-lg mb-8 text-vault-gray-600 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-base md:text-lg mb-10 text-vault-gray-600 leading-relaxed max-w-2xl mx-auto">
               Financial freedom is attainable for all. We empower you to build, grow, and protect your wealth through personalised tools and expert insights.
             </p>
 
@@ -109,10 +109,10 @@ export default function Home() {
       </section>
 
       {/* Product Features Grid */}
-      <section className="py-16 bg-white border-b border-vault-gray-200">
+      <section className="py-20 bg-white border-b border-vault-gray-200">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold font-display text-vault-black mb-3">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold font-display text-vault-black mb-6">
               Everything You Need to Succeed
             </h2>
             <p className="text-base text-vault-gray-600 max-w-2xl mx-auto">
@@ -217,10 +217,10 @@ export default function Home() {
       </section>
 
       {/* Wellness, Wealth, Wisdom Section */}
-      <section className="py-16 bg-vault-gray-50">
+      <section className="py-20 bg-vault-gray-50">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold font-display mb-3 text-vault-black">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold font-display mb-6 text-vault-black">
               Built on Three Pillars
             </h2>
             <p className="text-base text-vault-gray-600 max-w-2xl mx-auto">
@@ -228,7 +228,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-5">
+          <div className="grid md:grid-cols-3 gap-8">
             <FeatureCard
               icon="❤️"
               title="Wellness"
@@ -252,17 +252,17 @@ export default function Home() {
       </section>
 
       {/* Global Expansion Section */}
-      <section className="py-20 bg-white">
+      <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
               <div className="inline-block px-4 py-2 bg-vault-green-50 rounded-full text-vault-green-900 font-semibold mb-6 text-sm">
                 Going Global
               </div>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold font-display mb-6 text-vault-black">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold font-display mb-8 text-vault-black">
                 From South Africa to the World
               </h2>
-              <p className="text-lg text-vault-gray-600 mb-8 leading-relaxed">
+              <p className="text-lg text-vault-gray-600 mb-10 leading-relaxed">
                 Building on our success in South Africa, we've launched in the UAE with specialized support. Our proven platform adapts to local needs while delivering world-class financial tools.
               </p>
 
@@ -329,12 +329,12 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-vault-black text-white">
+      <section className="py-24 bg-vault-black text-white">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold font-display mb-4 text-white">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold font-display mb-6 text-white">
             Ready to Transform Your Financial Future?
           </h2>
-          <p className="text-lg text-vault-gray-400 mb-10">
+          <p className="text-lg text-vault-gray-400 mb-12">
             Join thousands of users who are taking control of their wealth with Vault22
           </p>
 

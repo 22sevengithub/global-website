@@ -52,7 +52,7 @@ export default function Products() {
       description="Explore Vault22's comprehensive suite of financial products including savings, investments, insurance, and wealth management tools."
     >
       {/* Hero */}
-      <section className="relative bg-gradient-to-br from-white via-vault-green-50 to-white py-16 md:py-20 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-white via-vault-green-50 to-white py-20 md:py-24 overflow-hidden">
         <div className="absolute inset-0 opacity-45">
           <img
             src="/images/backgrounds/hero-products.jpg"
@@ -62,10 +62,10 @@ export default function Products() {
           <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-vault-green-50/50" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center px-3 py-1.5 bg-vault-green-50 border border-vault-green-100 rounded-full mb-6">
+          <div className="inline-flex items-center px-3 py-1.5 bg-vault-green-50 border border-vault-green-100 rounded-full mb-8">
             <span className="text-xs font-medium text-vault-green-900">Our Products</span>
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-display text-vault-black mb-5 leading-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-display text-vault-black mb-8 leading-tight">
             Discover Our Products
           </h1>
           <p className="text-base md:text-lg text-vault-gray-600 max-w-2xl mx-auto leading-relaxed">
@@ -75,9 +75,9 @@ export default function Products() {
       </section>
 
       {/* Products Grid */}
-      <section className="py-12 bg-white">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-8">
             {products.map((product) => (
               <div key={product.id} id={product.id}>
                 <ProductCard
@@ -94,12 +94,12 @@ export default function Products() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-vault-black text-white">
+      <section className="py-24 bg-vault-black text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold font-display mb-3">
+          <h2 className="text-2xl md:text-3xl font-bold font-display mb-6">
             Ready to Get Started?
           </h2>
-          <p className="text-sm text-vault-gray-300 mb-6">
+          <p className="text-sm text-vault-gray-300 mb-8">
             Choose the right product for your financial goals
           </p>
           <Link
