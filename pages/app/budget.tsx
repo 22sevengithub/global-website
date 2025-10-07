@@ -2,16 +2,19 @@ import AppShell from '../../components/AppShell';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import LoadingAnimation from '../../components/LoadingAnimation';
 import Link from 'next/link';
+import { useState } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { getCurrentPayPeriod, getDaysRemainingInPeriod, formatPayPeriod, getStartDateOfPayPeriod, getEndDateOfPayPeriod } from '../../utils/payPeriod';
 import { getBudgetBreakdown, calculateBudgetProgress, getBudgetAlertLevel, getCurrentBudgetBreakdown, getCategoriesWithValues, getBudgetedOrAverageAmount } from '../../utils/budget';
 import { formatMoney } from '../../utils/currency';
 import { isIncomeGroup, getSpendingGroupIcon, getSpendingGroupColor } from '../../utils/spendingGroups';
+import AddBudgetModal from '../../components/budget/AddBudgetModal';
 
 export default function Budget() {
-  const { aggregate, customerInfo, loading } = useApp();
+  const { aggregate, customerInfo, loading, loadAggregate } = useApp();
   const { selectedCurrency } = useCurrency();
+  const [showAddBudgetModal, setShowAddBudgetModal] = useState(false);
 
   if (loading || !aggregate) {
     return (
@@ -206,8 +209,14 @@ export default function Budget() {
         <div className="bg-gray-50 dark:bg-thanos-800 p-6 rounded-2xl border border-gray-200 dark:border-thanos-700 animate-stagger-5 hover:shadow-lg transition-all duration-300">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900 dark:text-thanos-50">Category Budgets</h2>
-            <button className="px-4 py-2 bg-yellow text-gray-900 dark:text-thanos-900 rounded-full font-semibold hover:bg-pikachu-400 transition-all duration-200 hover:scale-105">
-              Edit Budgets
+            <button
+              onClick={() => setShowAddBudgetModal(true)}
+              className="px-4 py-2 bg-gradient-to-r from-sonic-500 to-bulbasaur-500 text-white rounded-full font-semibold hover:shadow-lg transition-all duration-200 hover:scale-105 flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Budget
             </button>
           </div>
           <div className="space-y-6">
@@ -313,6 +322,19 @@ export default function Budget() {
             </div>
           </div>
         </div>
+
+        {/* Add Budget Modal */}
+        <AddBudgetModal
+          isOpen={showAddBudgetModal}
+          onClose={() => setShowAddBudgetModal(false)}
+          spendingGroups={aggregate.spendingGroups}
+          categories={aggregate.categories}
+          customerId={customerInfo?.id || ''}
+          onSuccess={() => {
+            // Reload aggregate data to show new budget
+            loadAggregate();
+          }}
+        />
       </AppShell>
     </ProtectedRoute>
   );

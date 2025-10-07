@@ -61,7 +61,7 @@ export default function MultiSelectModal({
     } else {
       // Select all filtered items (merge with existing selections)
       const newIds = filteredItems.map(item => item.id);
-      setSelected(prev => [...new Set([...prev, ...newIds])]);
+      setSelected(prev => Array.from(new Set([...prev, ...newIds])));
     }
   };
 
