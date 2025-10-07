@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { TransactionFilterModel, QuickFilterOption, getFilterChipLabel, createEmptyFilter } from '../types/transactionFilters';
 import { Aggregate } from '../types';
 import { formatMoney } from '../utils/currency';
+import MultiSelectModal from './filters/MultiSelectModal';
 
 interface AdvancedFiltersModalProps {
   isOpen: boolean;
@@ -21,6 +22,10 @@ export default function AdvancedFiltersModal({
   onApplyFilters,
 }: AdvancedFiltersModalProps) {
   const [filters, setFilters] = useState<TransactionFilterModel>(currentFilters);
+  const [showAccountsModal, setShowAccountsModal] = useState(false);
+  const [showSpendingGroupsModal, setShowSpendingGroupsModal] = useState(false);
+  const [showCategoriesModal, setShowCategoriesModal] = useState(false);
+  const [showTagsModal, setShowTagsModal] = useState(false);
 
   useEffect(() => {
     setFilters(currentFilters);
@@ -46,6 +51,63 @@ export default function AdvancedFiltersModal({
     onApplyFilters(filters);
     onClose();
   };
+
+  // Prepare data for each filter type
+  console.log('RAW ACCOUNTS:', aggregate.accounts);
+  console.log('RAW SPENDING GROUPS:', aggregate.spendingGroups);
+  console.log('RAW CATEGORIES:', aggregate.categories);
+  console.log('RAW TAGS:', aggregate.tags);
+
+  const accountItems = aggregate.accounts
+    .filter(acc => !acc.deactivated)
+    .map(acc => {
+      const item = {
+        id: acc.ttsId || acc.id,
+        label: acc.name,
+        subtitle: acc.accountType || acc.accountClass,
+      };
+      console.log('Account item:', item);
+      return item;
+    })
+    .filter(item => item.id); // Remove items without IDs
+
+  const spendingGroupItems = aggregate.spendingGroups
+    .map(group => {
+      const item = {
+        id: group.ttsId || group.id,
+        label: group.description,
+      };
+      console.log('Spending group item:', item);
+      return item;
+    })
+    .filter(item => item.id);
+
+  const categoryItems = aggregate.categories
+    .map(cat => {
+      const item = {
+        id: cat.ttsId || cat.id,
+        label: cat.description,
+      };
+      console.log('Category item:', item);
+      return item;
+    })
+    .filter(item => item.id);
+
+  const tagItems = aggregate.tags
+    .map(tag => {
+      const item = {
+        id: tag.ttsId || tag.id,
+        label: `#${tag.name}`,
+      };
+      console.log('Tag item:', item);
+      return item;
+    })
+    .filter(item => item.id);
+
+  console.log('FINAL ACCOUNT ITEMS:', accountItems);
+  console.log('FINAL SPENDING GROUP ITEMS:', spendingGroupItems);
+  console.log('FINAL CATEGORY ITEMS:', categoryItems);
+  console.log('FINAL TAG ITEMS:', tagItems);
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -195,10 +257,7 @@ export default function AdvancedFiltersModal({
             <FilterSection
               title="Accounts"
               count={filters.accounts?.length || 0}
-              onClick={() => {
-                // TODO: Open accounts selection modal
-                alert('Account selection will be implemented next');
-              }}
+              onClick={() => setShowAccountsModal(true)}
             />
 
             <Divider />
@@ -206,10 +265,7 @@ export default function AdvancedFiltersModal({
             <FilterSection
               title="Spending Groups"
               count={filters.spendingGroups?.length || 0}
-              onClick={() => {
-                // TODO: Open spending groups selection modal
-                alert('Spending groups selection will be implemented next');
-              }}
+              onClick={() => setShowSpendingGroupsModal(true)}
             />
 
             <Divider />
@@ -217,10 +273,7 @@ export default function AdvancedFiltersModal({
             <FilterSection
               title="Categories"
               count={filters.categories?.length || 0}
-              onClick={() => {
-                // TODO: Open categories selection modal
-                alert('Categories selection will be implemented next');
-              }}
+              onClick={() => setShowCategoriesModal(true)}
             />
 
             <Divider />
@@ -228,10 +281,7 @@ export default function AdvancedFiltersModal({
             <FilterSection
               title="Tags"
               count={filters.tags?.length || 0}
-              onClick={() => {
-                // TODO: Open tags selection modal
-                alert('Tags selection will be implemented next');
-              }}
+              onClick={() => setShowTagsModal(true)}
             />
           </div>
 
@@ -252,6 +302,51 @@ export default function AdvancedFiltersModal({
           </div>
         </div>
       </div>
+
+      {/* Filter Selection Modals */}
+      <MultiSelectModal
+        isOpen={showAccountsModal}
+        onClose={() => setShowAccountsModal(false)}
+        title="Accounts"
+        items={accountItems}
+        selectedIds={filters.accounts || []}
+        onApply={(selectedIds) => setFilters({ ...filters, accounts: selectedIds.length > 0 ? selectedIds : undefined })}
+        clearText="Clear accounts"
+      />
+
+      <MultiSelectModal
+        isOpen={showSpendingGroupsModal}
+        onClose={() => setShowSpendingGroupsModal(false)}
+        title="Spending Groups"
+        items={spendingGroupItems}
+        selectedIds={filters.spendingGroups || []}
+        onApply={(selectedIds) => setFilters({ ...filters, spendingGroups: selectedIds.length > 0 ? selectedIds : undefined })}
+        clearText="Clear groups"
+      />
+
+      <MultiSelectModal
+        isOpen={showCategoriesModal}
+        onClose={() => setShowCategoriesModal(false)}
+        title="Categories"
+        items={categoryItems}
+        selectedIds={filters.categories || []}
+        onApply={(selectedIds) => setFilters({ ...filters, categories: selectedIds.length > 0 ? selectedIds : undefined })}
+        showSearch={true}
+        searchPlaceholder="Search categories..."
+        clearText="Clear categories"
+      />
+
+      <MultiSelectModal
+        isOpen={showTagsModal}
+        onClose={() => setShowTagsModal(false)}
+        title="Tags"
+        items={tagItems}
+        selectedIds={filters.tags || []}
+        onApply={(selectedIds) => setFilters({ ...filters, tags: selectedIds.length > 0 ? selectedIds : undefined })}
+        showSearch={true}
+        searchPlaceholder="Search/select a tag..."
+        clearText="Clear tags"
+      />
     </div>
   );
 }

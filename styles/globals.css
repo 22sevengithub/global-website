@@ -18,3 +18,143 @@ body {
 body {
   font-family: Inter, system-ui, -apple-system, sans-serif;
 }
+
+/* Date Input Styling for Theme Consistency */
+input[type="date"] {
+  position: relative;
+  cursor: pointer;
+}
+
+/* Style the calendar icon in light mode */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.5);
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+input[type="date"]:hover::-webkit-calendar-picker-indicator {
+  opacity: 1;
+}
+
+/* Style the calendar icon in dark mode */
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.8;
+}
+
+.dark input[type="date"]:hover::-webkit-calendar-picker-indicator {
+  opacity: 1;
+}
+
+/* Firefox date input styling */
+input[type="date"]::-moz-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.5);
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.dark input[type="date"]::-moz-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.8;
+}
+
+/* Slide up animation for modals */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+/* Fade in down animation */
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-down {
+  animation: fade-in-down 0.5s ease-out;
+}
+
+/* Fade in animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Scale in animation */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out;
+}
+
+/* Fade in up animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stagger animations */
+.animate-stagger-1 {
+  animation: fadeInUp 0.5s ease-out 0.1s both;
+}
+
+.animate-stagger-2 {
+  animation: fadeInUp 0.5s ease-out 0.2s both;
+}
+
+.animate-stagger-3 {
+  animation: fadeInUp 0.5s ease-out 0.3s both;
+}
+
+.animate-stagger-4 {
+  animation: fadeInUp 0.5s ease-out 0.4s both;
+}
+
+.animate-stagger-5 {
+  animation: fadeInUp 0.5s ease-out 0.5s both;
+}
+
+.animate-stagger-6 {
+  animation: fadeInUp 0.5s ease-out 0.6s both;
+}

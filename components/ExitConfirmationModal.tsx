@@ -25,7 +25,7 @@ export default function ExitConfirmationModal({ isOpen, onConfirm, onCancel }: E
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
         onClick={onCancel}
       />
 
@@ -53,13 +53,13 @@ export default function ExitConfirmationModal({ isOpen, onConfirm, onCancel }: E
           <div className="flex gap-3">
             <button
               onClick={onCancel}
-              className="flex-1 px-6 py-3 bg-vault-gray-100 dark:bg-vault-gray-700 text-vault-gray-900 dark:text-vault-gray-100 rounded-xl font-semibold hover:bg-vault-gray-200 dark:hover:bg-vault-gray-600 transition-all"
+              className="flex-1 px-6 py-3 bg-vault-gray-100 dark:bg-vault-gray-700 text-vault-gray-900 dark:text-vault-gray-100 rounded-xl font-semibold hover:bg-vault-gray-200 dark:hover:bg-vault-gray-600 hover:scale-105 transition-all duration-300"
             >
               Cancel
             </button>
             <button
               onClick={onConfirm}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition-all shadow-lg"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold hover:from-red-600 hover:to-red-700 hover:scale-105 hover:shadow-lg transition-all duration-300 shadow-lg"
             >
               Exit App
             </button>
