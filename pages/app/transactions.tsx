@@ -1,18 +1,21 @@
 import AppShell from '../../components/AppShell';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import LoadingAnimation from '../../components/LoadingAnimation';
+import FilterChips from '../../components/FilterChips';
+import AdvancedFiltersModal from '../../components/AdvancedFiltersModal';
 import { useState } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
-import { filterTransactions, groupTransactionsByDate } from '../../utils/transactions';
 import { formatMoney, convertCurrency } from '../../utils/currency';
-import { getCurrentPayPeriod } from '../../utils/payPeriod';
+import { processTransactionFilters, getActiveFilterCount } from '../../utils/transactionFilters';
+import { TransactionFilterModel, createEmptyFilter } from '../../types/transactionFilters';
+import Icon from '../../components/Icon';
 
 export default function Transactions() {
   const { aggregate, customerInfo, loading } = useApp();
   const { selectedCurrency } = useCurrency();
-  const [filter, setFilter] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<TransactionFilterModel>(createEmptyFilter());
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   if (loading || !aggregate) {
     return (
@@ -32,34 +35,43 @@ export default function Transactions() {
   // Filter out deleted transactions
   const allTransactions = aggregate.transactions.filter(t => !t.isDeleted);
 
-  // Apply filters based on selected filter and search
-  let filteredTransactions = allTransactions.filter(t => {
-    // Apply income/expense filter
-    if (filter === 'income' && t.amount.debitOrCredit !== 'credit') return false;
-    if (filter === 'expenses' && t.amount.debitOrCredit !== 'debit') return false;
+  // Apply filters using the comprehensive filter processor (matches Flutter app logic)
+  const filteredTransactions = processTransactionFilters(
+    allTransactions,
+    filters,
+    aggregate,
+    customerInfo?.currentPayPeriod
+  );
 
-    // Apply search
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      const merchant = aggregate.merchants.find(m => m.id === t.merchantId);
-      const category = aggregate.categories.find(c => c.id === t.categoryId);
+  // Handle filter removal
+  const handleRemoveFilter = (filterType: string, value?: any) => {
+    const newFilters = { ...filters };
 
-      return (
-        merchant?.name.toLowerCase().includes(searchLower) ||
-        category?.description.toLowerCase().includes(searchLower) ||
-        t.description?.toLowerCase().includes(searchLower)
-      );
+    if (filterType === 'quickFilter' && value) {
+      newFilters.quickFilters = { ...newFilters.quickFilters, [value]: false };
+    } else if (filterType === 'categories') {
+      newFilters.categories = undefined;
+    } else if (filterType === 'spendingGroups') {
+      newFilters.spendingGroups = undefined;
+    } else if (filterType === 'accounts') {
+      newFilters.accounts = undefined;
+    } else if (filterType === 'tags') {
+      newFilters.tags = undefined;
+    } else if (filterType === 'minAmount') {
+      newFilters.minAmount = undefined;
+    } else if (filterType === 'maxAmount') {
+      newFilters.maxAmount = undefined;
+    } else if (filterType === 'dateRange') {
+      newFilters.fromDate = undefined;
+      newFilters.toDate = undefined;
+    } else if (filterType === 'fromDate') {
+      newFilters.fromDate = undefined;
+    } else if (filterType === 'toDate') {
+      newFilters.toDate = undefined;
     }
 
-    return true;
-  });
-
-  // Sort by date (most recent first)
-  filteredTransactions = filteredTransactions.sort((a, b) => {
-    const dateA = new Date(a.transactionDate || 0).getTime();
-    const dateB = new Date(b.transactionDate || 0).getTime();
-    return dateB - dateA; // Descending order (newest first)
-  });
+    setFilters(newFilters);
+  };
 
   // Calculate totals from filtered transactions
   const totalIncome = filteredTransactions
@@ -85,16 +97,66 @@ export default function Transactions() {
     return icons[category?.description || ''] || '💼';
   };
 
+  const activeFilterCount = getActiveFilterCount(filters);
+
   return (
     <ProtectedRoute>
       <AppShell title="Transactions | Vault22">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold font-display text-vault-black dark:text-white mb-2">
-            Transactions
-          </h1>
-          <p className="text-vault-gray-600 dark:text-vault-gray-400">Track and categorize all your spending</p>
+        {/* Header with Filter Button */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-3xl font-bold font-display text-gray-900 dark:text-thanos-50">
+              Transactions
+            </h1>
+            <button
+              onClick={() => setIsFilterModalOpen(true)}
+              className="relative flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-thanos-800 hover:bg-gray-200 dark:hover:bg-thanos-700 rounded-lg transition-colors"
+            >
+              <Icon name="ic_setting" size={20} />
+              <span className="font-medium text-gray-900 dark:text-thanos-50">Filters</span>
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow text-thanos-950 text-xs font-bold rounded-full flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </div>
+          <p className="text-gray-600 dark:text-thanos-200">Track and categorize all your spending</p>
         </div>
+
+        {/* Search Bar */}
+        <div className="mb-4">
+          <div className="relative">
+            <svg
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-thanos-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search transactions by merchant, category, amount..."
+              value={filters.searchQuery || ''}
+              onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
+              className="w-full pl-12 pr-4 py-3 border border-gray-200 dark:border-thanos-700 bg-white dark:bg-thanos-800 text-gray-900 dark:text-thanos-50 rounded-xl focus:ring-2 focus:ring-bulbasaur-500 focus:border-transparent transition-all"
+            />
+          </div>
+        </div>
+
+        {/* Filter Chips */}
+        <FilterChips
+          filters={filters}
+          aggregate={aggregate}
+          currency={currency}
+          onRemoveFilter={handleRemoveFilter}
+        />
 
         {/* Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -117,45 +179,6 @@ export default function Transactions() {
           </div>
         </div>
 
-        {/* Filters & Search */}
-        <div className="bg-white dark:bg-vault-gray-800 p-6 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-vault-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search transactions..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border-2 border-vault-gray-200 dark:border-vault-gray-700 dark:bg-vault-gray-800 dark:text-white rounded-xl focus:border-vault-green focus:outline-none transition-all"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setFilter('all')}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all ${filter === 'all' ? 'bg-vault-green text-vault-black' : 'bg-vault-gray-100 dark:bg-vault-gray-600 text-vault-gray-700 dark:text-vault-gray-300 hover:bg-vault-gray-200 dark:hover:bg-vault-gray-500'}`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setFilter('income')}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all ${filter === 'income' ? 'bg-vault-green text-vault-black' : 'bg-vault-gray-100 dark:bg-vault-gray-600 text-vault-gray-700 dark:text-vault-gray-300 hover:bg-vault-gray-200 dark:hover:bg-vault-gray-500'}`}
-              >
-                Income
-              </button>
-              <button
-                onClick={() => setFilter('expenses')}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all ${filter === 'expenses' ? 'bg-vault-green text-vault-black' : 'bg-vault-gray-100 dark:bg-vault-gray-600 text-vault-gray-700 dark:text-vault-gray-300 hover:bg-vault-gray-200 dark:hover:bg-vault-gray-500'}`}
-              >
-                Expenses
-              </button>
-            </div>
-          </div>
-        </div>
 
         {/* Transactions List */}
         <div className="bg-white dark:bg-vault-gray-800 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700 overflow-hidden">
@@ -236,6 +259,19 @@ export default function Transactions() {
             </table>
           </div>
         </div>
+
+        {/* Advanced Filters Modal */}
+        <AdvancedFiltersModal
+          isOpen={isFilterModalOpen}
+          onClose={() => setIsFilterModalOpen(false)}
+          currentFilters={filters}
+          aggregate={aggregate}
+          currency={currency}
+          onApplyFilters={(newFilters) => {
+            setFilters(newFilters);
+            setIsFilterModalOpen(false);
+          }}
+        />
       </AppShell>
     </ProtectedRoute>
   );

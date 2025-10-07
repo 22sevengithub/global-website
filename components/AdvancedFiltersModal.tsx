@@ -1,0 +1,293 @@
+import { useState, useEffect } from 'react';
+import { TransactionFilterModel, QuickFilterOption, getFilterChipLabel, createEmptyFilter } from '../types/transactionFilters';
+import { CustomerAggregate } from '../types';
+import { formatMoney } from '../utils/currency';
+
+interface AdvancedFiltersModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  currentFilters: TransactionFilterModel;
+  aggregate: CustomerAggregate;
+  currency: string;
+  onApplyFilters: (filters: TransactionFilterModel) => void;
+}
+
+export default function AdvancedFiltersModal({
+  isOpen,
+  onClose,
+  currentFilters,
+  aggregate,
+  currency,
+  onApplyFilters,
+}: AdvancedFiltersModalProps) {
+  const [filters, setFilters] = useState<TransactionFilterModel>(currentFilters);
+
+  useEffect(() => {
+    setFilters(currentFilters);
+  }, [currentFilters, isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleQuickFilterToggle = (filterKey: QuickFilterOption) => {
+    setFilters({
+      ...filters,
+      quickFilters: {
+        ...filters.quickFilters,
+        [filterKey]: !filters.quickFilters[filterKey],
+      },
+    });
+  };
+
+  const handleClearAll = () => {
+    setFilters(createEmptyFilter());
+  };
+
+  const handleApply = () => {
+    onApplyFilters(filters);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={onClose} />
+
+      {/* Modal */}
+      <div className="relative min-h-screen flex items-center justify-center p-4">
+        <div className="relative bg-white dark:bg-thanos-900 rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-thanos-700">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-thanos-50">Filters</h2>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-thanos-800 rounded-full transition-colors"
+            >
+              <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {/* Quick Filters */}
+            <div className="mb-8">
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-thanos-300 uppercase tracking-wide mb-4">
+                Quick Filters
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {Object.values(QuickFilterOption).map((filterKey) => (
+                  <button
+                    key={filterKey}
+                    onClick={() => handleQuickFilterToggle(filterKey)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${
+                      filters.quickFilters[filterKey]
+                        ? 'bg-bulbasaur-100 dark:bg-bulbasaur-900/30 text-bulbasaur-900 dark:text-bulbasaur-100 border-bulbasaur-500 dark:border-bulbasaur-700'
+                        : 'bg-white dark:bg-thanos-800 text-gray-700 dark:text-thanos-200 border-gray-300 dark:border-thanos-600 hover:border-gray-400 dark:hover:border-thanos-500'
+                    }`}
+                  >
+                    {getFilterChipLabel(filterKey)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Divider />
+
+            {/* Custom Date Range */}
+            <div className="mb-8">
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-thanos-300 uppercase tracking-wide mb-4">
+                Custom Date Range
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-thanos-200 mb-2">
+                    From Date
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.fromDate ? filters.fromDate.toISOString().split('T')[0] : ''}
+                    onChange={(e) =>
+                      setFilters({
+                        ...filters,
+                        fromDate: e.target.value ? new Date(e.target.value) : undefined,
+                      })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-thanos-600 rounded-lg bg-white dark:bg-thanos-800 text-gray-900 dark:text-thanos-50 focus:ring-2 focus:ring-bulbasaur-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-thanos-200 mb-2">
+                    To Date
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.toDate ? filters.toDate.toISOString().split('T')[0] : ''}
+                    onChange={(e) =>
+                      setFilters({
+                        ...filters,
+                        toDate: e.target.value ? new Date(e.target.value) : undefined,
+                      })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-thanos-600 rounded-lg bg-white dark:bg-thanos-800 text-gray-900 dark:text-thanos-50 focus:ring-2 focus:ring-bulbasaur-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <Divider />
+
+            {/* Amount Range */}
+            <div className="mb-8">
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-thanos-300 uppercase tracking-wide mb-4">
+                Amount Range
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-thanos-200 mb-2">
+                    Min Amount
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={filters.minAmount ?? ''}
+                    onChange={(e) =>
+                      setFilters({
+                        ...filters,
+                        minAmount: e.target.value ? parseFloat(e.target.value) : undefined,
+                      })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-thanos-600 rounded-lg bg-white dark:bg-thanos-800 text-gray-900 dark:text-thanos-50 focus:ring-2 focus:ring-bulbasaur-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-thanos-200 mb-2">
+                    Max Amount
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="999999"
+                    value={filters.maxAmount ?? ''}
+                    onChange={(e) =>
+                      setFilters({
+                        ...filters,
+                        maxAmount: e.target.value ? parseFloat(e.target.value) : undefined,
+                      })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-thanos-600 rounded-lg bg-white dark:bg-thanos-800 text-gray-900 dark:text-thanos-50 focus:ring-2 focus:ring-bulbasaur-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+              {(filters.minAmount !== undefined || filters.maxAmount !== undefined) && (
+                <p className="text-sm text-gray-600 dark:text-thanos-300 mt-2">
+                  {filters.minAmount !== undefined && filters.maxAmount !== undefined
+                    ? `${formatMoney(filters.minAmount, currency)} - ${formatMoney(filters.maxAmount, currency)}`
+                    : filters.minAmount !== undefined
+                    ? `Over ${formatMoney(filters.minAmount, currency)}`
+                    : `Under ${formatMoney(filters.maxAmount!, currency)}`}
+                </p>
+              )}
+            </div>
+
+            <Divider />
+
+            {/* Multi-select filters preview */}
+            <FilterSection
+              title="Accounts"
+              count={filters.accounts?.length || 0}
+              onClick={() => {
+                // TODO: Open accounts selection modal
+                alert('Account selection will be implemented next');
+              }}
+            />
+
+            <Divider />
+
+            <FilterSection
+              title="Spending Groups"
+              count={filters.spendingGroups?.length || 0}
+              onClick={() => {
+                // TODO: Open spending groups selection modal
+                alert('Spending groups selection will be implemented next');
+              }}
+            />
+
+            <Divider />
+
+            <FilterSection
+              title="Categories"
+              count={filters.categories?.length || 0}
+              onClick={() => {
+                // TODO: Open categories selection modal
+                alert('Categories selection will be implemented next');
+              }}
+            />
+
+            <Divider />
+
+            <FilterSection
+              title="Tags"
+              count={filters.tags?.length || 0}
+              onClick={() => {
+                // TODO: Open tags selection modal
+                alert('Tags selection will be implemented next');
+              }}
+            />
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-thanos-700 bg-white dark:bg-thanos-900">
+            <button
+              onClick={handleClearAll}
+              className="px-6 py-3 text-red-600 dark:text-peach-400 font-medium hover:bg-red-50 dark:hover:bg-peach-900/20 rounded-lg transition-all"
+            >
+              Clear All
+            </button>
+            <button
+              onClick={handleApply}
+              className="px-8 py-3 bg-yellow hover:bg-yellow/90 text-thanos-950 font-bold rounded-lg transition-all shadow-lg hover:shadow-xl"
+            >
+              Apply Filters
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Divider() {
+  return <div className="h-px bg-gray-200 dark:bg-thanos-700 my-6" />;
+}
+
+interface FilterSectionProps {
+  title: string;
+  count: number;
+  onClick: () => void;
+}
+
+function FilterSection({ title, count, onClick }: FilterSectionProps) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center justify-between py-4 hover:bg-gray-50 dark:hover:bg-thanos-800 rounded-lg px-2 transition-colors"
+    >
+      <div className="flex items-center gap-3">
+        <span className="text-base font-medium text-gray-900 dark:text-thanos-50">{title}</span>
+        {count > 0 && (
+          <span className="px-2 py-0.5 bg-bulbasaur-100 dark:bg-bulbasaur-900/30 text-bulbasaur-900 dark:text-bulbasaur-100 text-xs font-medium rounded-full">
+            {count}
+          </span>
+        )}
+      </div>
+      <svg
+        className="w-5 h-5 text-gray-400 dark:text-thanos-400"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
+  );
+}

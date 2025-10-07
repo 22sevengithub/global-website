@@ -6,7 +6,7 @@ export default function Redirect() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/app/'$(echo $page | sed 's/\.tsx//'));
+    router.replace('/app/health-score');
   }, [router]);
 
   return null;
