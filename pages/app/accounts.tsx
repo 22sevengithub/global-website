@@ -273,25 +273,14 @@ export default function Accounts() {
               </div>
               <div className="space-y-4">
                 <Link
-                  href="/app/link-account"
+                  href="/app/select-account-type"
                   className="w-full p-4 border-2 border-vault-gray-200 dark:border-vault-gray-700 rounded-xl hover:border-vault-green transition-all text-left flex items-center"
                   onClick={() => setShowAddModal(false)}
                 >
-                  <span className="text-3xl mr-4">🔗</span>
+                  <span className="text-3xl mr-4">➕</span>
                   <div>
-                    <h3 className="font-bold text-vault-black dark:text-white">Connect via Open Banking</h3>
-                    <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400">Instant secure connection</p>
-                  </div>
-                </Link>
-                <Link
-                  href="/app/add-manual-account"
-                  className="w-full p-4 border-2 border-vault-gray-200 dark:border-vault-gray-700 rounded-xl hover:border-vault-green transition-all text-left flex items-center"
-                  onClick={() => setShowAddModal(false)}
-                >
-                  <span className="text-3xl mr-4">✍️</span>
-                  <div>
-                    <h3 className="font-bold text-vault-black dark:text-white">Add Manually</h3>
-                    <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400">Enter details yourself</p>
+                    <h3 className="font-bold text-vault-black dark:text-white">Add Account</h3>
+                    <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400">Select account type and add</p>
                   </div>
                 </Link>
               </div>

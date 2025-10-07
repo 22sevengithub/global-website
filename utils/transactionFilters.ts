@@ -1,4 +1,4 @@
-import { Transaction, CustomerAggregate } from '../types';
+import { Transaction, Aggregate } from '../types';
 import { TransactionFilterModel, QuickFilterOption } from '../types/transactionFilters';
 
 const CAT_ID_UNCATEGORIZED = '00000000-0000-0000-0000-000000000001';
@@ -10,7 +10,7 @@ const CAT_ID_UNCATEGORIZED = '00000000-0000-0000-0000-000000000001';
 export function processTransactionFilters(
   transactions: Transaction[],
   filters: TransactionFilterModel,
-  aggregate: CustomerAggregate,
+  aggregate: Aggregate,
   currentPayPeriod?: string
 ): Transaction[] {
   let query: Transaction[] = [...transactions];
@@ -33,13 +33,13 @@ export function processTransactionFilters(
   // 4. Filter by tags
   if (filters.tags && filters.tags.length > 0) {
     query = query.filter((trxn) =>
-      trxn.tags?.some((tagId) => filters.tags!.includes(tagId))
+      trxn.tags?.some((tag) => filters.tags!.includes(tag.id || tag.ttsId))
     );
   }
 
   // 5. Filter by pending status
   if (filters.quickFilters[QuickFilterOption.PENDING]) {
-    query = query.filter((trxn) => trxn.isPendingTransaction);
+    query = query.filter((trxn) => trxn.isPending);
   }
 
   // 6. Filter by unseen/read status
@@ -82,7 +82,7 @@ export function processTransactionFilters(
 
     query = query.filter((trxn) => {
       const notTransfer = !transferSpendingGroupId || trxn.spendingGroupId !== transferSpendingGroupId;
-      const inCurrentPeriod = trxn.payPeriod === currentPayPeriod;
+      const inCurrentPeriod = currentPayPeriod ? trxn.payPeriod === parseInt(currentPayPeriod) : true;
       return notTransfer && inCurrentPeriod;
     });
   }
@@ -134,9 +134,9 @@ export function processTransactionFilters(
 
       // Search in tags
       const transactionTags = trxn.tags || [];
-      const tagMatch = transactionTags.some((tagId) => {
-        const tag = aggregate.tags?.find((t) => t.id === tagId);
-        return tag?.description?.toLowerCase().includes(term) || false;
+      const tagMatch = transactionTags.some((tag) => {
+        const tagData = aggregate.tags?.find((t) => t.id === tag.id || t.ttsId === tag.ttsId);
+        return tagData?.name?.toLowerCase().includes(term) || false;
       });
 
       // Search by exact amount match (rounded)

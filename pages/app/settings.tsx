@@ -1,15 +1,22 @@
 import AppShell from '../../components/AppShell';
 import ProtectedRoute from '../../components/ProtectedRoute';
+import ExitConfirmationModal from '../../components/ExitConfirmationModal';
 import Link from 'next/link';
+import Icon from '../../components/Icon';
 import { useApp } from '../../contexts/AppContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { authApi } from '../../services/api';
 import { useRouter } from 'next/router';
+import { useState } from 'react';
 
 interface SettingsItem {
   title: string;
   subtitle: string;
   icon: string;
-  href: string;
+  href?: string;
+  comingSoon?: boolean;
+  action?: () => void;
 }
 
 interface SettingsSection {
@@ -19,16 +26,28 @@ interface SettingsSection {
 
 export default function Settings() {
   const router = useRouter();
-  const { customerInfo } = useApp();
+  const { customerInfo, logout } = useApp();
+  const { selectedCurrency } = useCurrency();
+  const { theme, toggleTheme } = useTheme();
+  const [showComingSoon, setShowComingSoon] = useState<string | null>(null);
+  const [showExitModal, setShowExitModal] = useState(false);
 
-  const handleLogout = async () => {
-    try {
-      await authApi.logout();
-      router.push('/login');
-    } catch (error) {
-      console.error('Logout failed:', error);
-      router.push('/login');
-    }
+  const handleComingSoon = (feature: string) => {
+    setShowComingSoon(feature);
+    setTimeout(() => setShowComingSoon(null), 2000);
+  };
+
+  const handleLogoutClick = () => {
+    setShowExitModal(true);
+  };
+
+  const handleExitConfirm = async () => {
+    await logout();
+    router.push('/');
+  };
+
+  const handleExitCancel = () => {
+    setShowExitModal(false);
   };
 
   const settingsSections: SettingsSection[] = [
@@ -38,8 +57,20 @@ export default function Settings() {
         {
           title: 'Profile',
           subtitle: 'Manage your personal information',
-          icon: '/icons/ic_profile.svg',
-          href: '/profile',
+          icon: 'ic_profile',
+          href: '/app/profile',
+        },
+        {
+          title: 'Investment Style',
+          subtitle: 'Set your risk tolerance & preferences',
+          icon: 'ic_investment',
+          comingSoon: true,
+        },
+        {
+          title: 'Recurring Payments',
+          subtitle: 'Manage scheduled transactions',
+          icon: 'ic_recurring',
+          comingSoon: true,
         },
       ],
     },
@@ -48,21 +79,34 @@ export default function Settings() {
       items: [
         {
           title: 'Currency',
-          subtitle: `Currently using ${customerInfo?.defaultCurrencyCode || 'AED'}`,
-          icon: '/icons/ic_currency.svg',
-          href: '/currency-selection',
+          subtitle: `Currently using ${selectedCurrency}`,
+          icon: 'ic_currency',
+          href: '/app/currency-settings',
+          comingSoon: true,
         },
         {
           title: 'Security',
-          subtitle: 'Manage passwords and authentication',
-          icon: '/icons/ic_security.svg',
-          href: '#',
+          subtitle: 'Manage passwords & biometric login',
+          icon: 'ic_security',
+          comingSoon: true,
+        },
+        {
+          title: 'Notifications',
+          subtitle: 'Manage push notifications & alerts',
+          icon: 'ic_notifications',
+          comingSoon: true,
+        },
+        {
+          title: 'Language',
+          subtitle: 'English (US)',
+          icon: 'ic_language',
+          comingSoon: true,
         },
         {
           title: 'Theme',
-          subtitle: 'Choose your preferred theme',
-          icon: '/icons/ic_theme.svg',
-          href: '#',
+          subtitle: theme === 'dark' ? 'Dark mode enabled' : 'Light mode enabled',
+          icon: 'ic_theme',
+          action: toggleTheme,
         },
       ],
     },
@@ -71,15 +115,38 @@ export default function Settings() {
       items: [
         {
           title: 'Account Preferences',
-          subtitle: 'Manage account settings',
-          icon: '/icons/ic_account_pref.svg',
-          href: '#',
+          subtitle: 'Manage linked accounts & settings',
+          icon: 'ic_account_pref',
+          href: '/app/accounts',
         },
         {
           title: 'Deactivated Accounts',
           subtitle: 'View and restore deactivated accounts',
-          icon: '/icons/ic_reactive_account.svg',
-          href: '#',
+          icon: 'ic_reactive_account',
+          comingSoon: true,
+        },
+        {
+          title: 'Close Account',
+          subtitle: 'Permanently delete your Vault22 account',
+          icon: 'ic_close_account',
+          comingSoon: true,
+        },
+      ],
+    },
+    {
+      title: 'Support',
+      items: [
+        {
+          title: 'Contact Us',
+          subtitle: 'Get help from our support team',
+          icon: 'ic_contact',
+          comingSoon: true,
+        },
+        {
+          title: 'Third Party Management',
+          subtitle: 'Manage connected services & permissions',
+          icon: 'ic_third_party',
+          comingSoon: true,
         },
       ],
     },
@@ -91,12 +158,15 @@ export default function Settings() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <Link href="/dashboard" className="inline-flex items-center text-vault-green hover:text-vault-green-dark mb-4">
+            <button
+              onClick={() => router.back()}
+              className="inline-flex items-center text-vault-green hover:text-vault-green-dark mb-4"
+            >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back
-            </Link>
+            </button>
             <h1 className="text-3xl font-bold font-display text-vault-black dark:text-white mb-2">
               Settings
             </h1>
@@ -104,6 +174,13 @@ export default function Settings() {
               Manage your account preferences
             </p>
           </div>
+
+          {/* Coming Soon Toast */}
+          {showComingSoon && (
+            <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-vault-green text-white px-6 py-3 rounded-xl shadow-lg animate-bounce-in">
+              <p className="font-semibold">{showComingSoon} - Coming Soon!</p>
+            </div>
+          )}
 
           {/* Settings Sections */}
           <div className="space-y-8">
@@ -113,32 +190,64 @@ export default function Settings() {
                   {section.title}
                 </h2>
                 <div className="bg-white dark:bg-vault-gray-800 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700 overflow-hidden">
-                  {section.items.map((item, index) => (
-                    <div key={item.title}>
-                      <Link
-                        href={item.href}
-                        className="flex items-center p-4 hover:bg-vault-gray-50 dark:hover:bg-vault-gray-700 transition-all group"
-                      >
-                        <div className="w-12 h-12 bg-vault-green/10 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                          <img src={item.icon} alt={item.title} className="w-6 h-6" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-vault-black dark:text-white group-hover:text-vault-green transition-colors">
-                            {item.title}
-                          </h3>
-                          <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400">
-                            {item.subtitle}
-                          </p>
-                        </div>
-                        <svg className="w-6 h-6 text-vault-gray-400 group-hover:text-vault-green transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </Link>
-                      {index < section.items.length - 1 && (
-                        <div className="border-t border-vault-gray-200 dark:border-vault-gray-700 ml-20"></div>
-                      )}
-                    </div>
-                  ))}
+                  {section.items.map((item, index) => {
+                    const ItemWrapper = item.href && !item.comingSoon ? Link : 'div';
+                    const wrapperProps: any = {};
+
+                    if (item.href && !item.comingSoon) {
+                      wrapperProps.href = item.href;
+                    }
+
+                    return (
+                      <div key={item.title}>
+                        <ItemWrapper
+                          {...wrapperProps}
+                          onClick={(e: any) => {
+                            if (item.comingSoon) {
+                              e.preventDefault();
+                              handleComingSoon(item.title);
+                            } else if (item.action) {
+                              e.preventDefault();
+                              item.action();
+                            }
+                          }}
+                          className="flex items-center p-4 hover:bg-vault-gray-50 dark:hover:bg-vault-gray-700 transition-all group cursor-pointer"
+                        >
+                          <div className="w-12 h-12 bg-vault-green/10 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                            <Icon name={item.icon} size={24} />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold text-vault-black dark:text-white group-hover:text-vault-green transition-colors">
+                                {item.title}
+                              </h3>
+                              {item.comingSoon && (
+                                <span className="text-xs bg-vault-green/10 text-vault-green px-2 py-0.5 rounded-full font-semibold">
+                                  Soon
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400">
+                              {item.subtitle}
+                            </p>
+                          </div>
+                          {!item.action && (
+                            <svg className="w-6 h-6 text-vault-gray-400 group-hover:text-vault-green transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          )}
+                          {item.action && (
+                            <div className={`w-12 h-6 rounded-full transition-colors ${theme === 'dark' ? 'bg-vault-green' : 'bg-vault-gray-300'} relative`}>
+                              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${theme === 'dark' ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
+                            </div>
+                          )}
+                        </ItemWrapper>
+                        {index < section.items.length - 1 && (
+                          <div className="border-t border-vault-gray-200 dark:border-vault-gray-700 ml-20"></div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ))}
@@ -146,13 +255,13 @@ export default function Settings() {
             {/* Logout Button */}
             <div className="mt-8">
               <button
-                onClick={handleLogout}
+                onClick={handleLogoutClick}
                 className="w-full p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-2xl text-red-600 dark:text-red-400 font-semibold hover:bg-red-100 dark:hover:bg-red-900/30 transition-all flex items-center justify-center"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
-                Logout
+                Exit App
               </button>
             </div>
 
@@ -162,6 +271,13 @@ export default function Settings() {
             </div>
           </div>
         </div>
+
+        {/* Exit Confirmation Modal */}
+        <ExitConfirmationModal
+          isOpen={showExitModal}
+          onConfirm={handleExitConfirm}
+          onCancel={handleExitCancel}
+        />
       </AppShell>
     </ProtectedRoute>
   );

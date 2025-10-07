@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { TransactionFilterModel, QuickFilterOption, getFilterChipLabel, createEmptyFilter } from '../types/transactionFilters';
-import { CustomerAggregate } from '../types';
+import { Aggregate } from '../types';
 import { formatMoney } from '../utils/currency';
 
 interface AdvancedFiltersModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentFilters: TransactionFilterModel;
-  aggregate: CustomerAggregate;
+  aggregate: Aggregate;
   currency: string;
   onApplyFilters: (filters: TransactionFilterModel) => void;
 }

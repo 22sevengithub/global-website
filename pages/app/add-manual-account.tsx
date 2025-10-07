@@ -66,6 +66,7 @@ export default function AddManualAccount() {
         currencyCode: accountData.currencyCode,
         accountIcon: accountData.accountIcon,
         displayType: 'Manual',
+        providerLoginId: 'ULTRA THINK',  // Mark as manual account (same as mobile app)
       });
 
       // Reload accounts data
