@@ -8,7 +8,7 @@ export default function About() {
       description="Learn about Vault22's mission to make wealth a process, not a privilege. Discover our expansion from South Africa to UAE."
     >
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-white via-vault-green-50 to-white py-16 md:py-20 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-white via-vault-green-50 to-white py-20 md:py-24 overflow-hidden">
         <div className="absolute inset-0 opacity-55">
           <img
             src="/images/backgrounds/vault22-top-image.jpg"
@@ -18,10 +18,10 @@ export default function About() {
           <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-vault-green-50/40 to-white/35" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center px-3 py-1.5 bg-vault-green-50 border border-vault-green-100 rounded-full mb-6">
+          <div className="inline-flex items-center px-3 py-1.5 bg-vault-green-50 border border-vault-green-100 rounded-full mb-8">
             <span className="text-xs font-medium text-vault-green-900">About Vault22</span>
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-display text-vault-black mb-5 leading-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-display text-vault-black mb-8 leading-tight">
             Designed to Support You
           </h1>
           <p className="text-base md:text-lg text-vault-gray-600 max-w-2xl mx-auto leading-relaxed">
@@ -31,14 +31,14 @@ export default function About() {
       </section>
 
       {/* Mission & Values */}
-      <section className="py-16 bg-white">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-16 items-center mb-24">
+          <div className="grid md:grid-cols-2 gap-16 items-center mb-20">
             <div>
-              <h2 className="text-4xl font-bold font-display text-vault-black mb-6">
+              <h2 className="text-4xl font-bold font-display text-vault-black mb-8">
                 Our Mission
               </h2>
-              <p className="text-lg text-vault-gray-700 leading-relaxed mb-6">
+              <p className="text-lg text-vault-gray-700 leading-relaxed mb-8">
                 At Vault22, we believe that wealth building should be a systematic process accessible to everyone, not a privilege reserved for the few. We're breaking down barriers to financial success through:
               </p>
               <ul className="space-y-4">
@@ -83,8 +83,8 @@ export default function About() {
           </div>
 
           {/* Core Values */}
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold font-display text-vault-black mb-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold font-display text-vault-black mb-6">
               Our Core Values
             </h2>
             <p className="text-xl text-vault-gray-600">The principles that guide everything we do</p>
@@ -127,13 +127,13 @@ export default function About() {
       </section>
 
       {/* Global Expansion Section */}
-      <section id="global" className="py-16 bg-vault-black text-white">
+      <section id="global" className="py-20 bg-vault-black text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-block px-4 py-2 bg-vault-green/20 rounded-full text-vault-green font-semibold mb-6">
+          <div className="text-center mb-20">
+            <div className="inline-block px-4 py-2 bg-vault-green/20 rounded-full text-vault-green font-semibold mb-8">
               Going Global
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold font-display mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold font-display mb-8">
               Expanding Our Vision Worldwide
             </h2>
             <p className="text-xl text-vault-gray-300 max-w-3xl mx-auto">
@@ -170,10 +170,10 @@ export default function About() {
       </section>
 
       {/* Regional Focus Section */}
-      <section id="regions" className="py-16 bg-white">
+      <section id="regions" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold font-display text-vault-black mb-6">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold font-display text-vault-black mb-8">
               Our Regional Presence
             </h2>
             <p className="text-xl text-vault-gray-600 max-w-3xl mx-auto">
@@ -336,9 +336,9 @@ export default function About() {
       </section>
 
       {/* Backed By Section */}
-      <section className="py-16 bg-vault-gray-50">
+      <section className="py-20 bg-vault-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <div className="text-center mb-16">
             <p className="text-sm font-semibold text-vault-gray-500 uppercase tracking-wide mb-4">Backed By</p>
             <div className="flex flex-wrap justify-center items-center gap-12">
               <div className="text-2xl font-bold text-vault-gray-700">SC Ventures</div>
@@ -349,12 +349,12 @@ export default function About() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-vault-black text-white">
+      <section className="py-24 bg-vault-black text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold font-display mb-3">
+          <h2 className="text-2xl md:text-3xl font-bold font-display mb-6">
             Ready to Join Our Global Community?
           </h2>
-          <p className="text-sm text-vault-gray-300 mb-6">
+          <p className="text-sm text-vault-gray-300 mb-8">
             Start your journey to financial freedom with Vault22 today
           </p>
           <Link

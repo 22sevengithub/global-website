@@ -1,33 +1,14 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
-import CurrencySelector from './CurrencySelector';
 import LoadingAnimation from './LoadingAnimation';
 
 export default function Header() {
   const router = useRouter();
-  const { isAuthenticated, customerInfo, logout } = useApp();
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [mounted, setMounted] = useState(false);
+  const { isAuthenticated, logout } = useApp();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
-    const systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    const initialTheme = savedTheme || systemPreference;
-    setTheme(initialTheme);
-    document.documentElement.classList.toggle('dark', initialTheme === 'dark');
-  }, []);
-
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
-  };
 
   const handleLogoutClick = () => {
     setShowLogoutModal(true);
@@ -73,12 +54,8 @@ export default function Header() {
               Home
             </Link>
             <Link
-              href="/dashboard"
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                router.pathname.startsWith('/dashboard') || router.pathname.startsWith('/accounts') || router.pathname.startsWith('/transactions') || router.pathname.startsWith('/budget') || router.pathname.startsWith('/goals') || router.pathname.startsWith('/investments') || router.pathname.startsWith('/health-score')
-                  ? 'text-vault-green bg-vault-green/10'
-                  : 'text-vault-gray-700 dark:text-vault-gray-300 hover:text-vault-green hover:bg-vault-gray-50 dark:hover:bg-vault-gray-800'
-              }`}
+              href="/app/dashboard"
+              className="px-4 py-2 rounded-lg font-medium transition-colors text-vault-gray-700 dark:text-vault-gray-300 hover:text-vault-green hover:bg-vault-gray-50 dark:hover:bg-vault-gray-800"
             >
               App
             </Link>
@@ -123,47 +100,14 @@ export default function Header() {
               Contact
             </Link>
 
-            {/* Dark Mode Toggle */}
-            {mounted && (
-              <button
-                onClick={toggleTheme}
-                className="ml-4 p-2.5 rounded-full border-2 border-vault-gray-300 dark:border-vault-gray-600 hover:border-vault-green dark:hover:border-vault-green transition-all hover:shadow-lg"
-                aria-label="Toggle dark mode"
-              >
-                {theme === 'dark' ? (
-                <svg className="w-5 h-5 text-vault-yellow" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5 text-vault-gray-700" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-                </svg>
-              )}
-              </button>
-            )}
-
             {/* CTA Buttons */}
             {isAuthenticated ? (
-              <>
-                {/* Currency Selector */}
-                <div className="ml-4">
-                  <CurrencySelector />
-                </div>
-
-                {customerInfo && (
-                  <div className="ml-4 flex items-center">
-                    <span className="text-sm text-vault-gray-700 dark:text-vault-gray-300 mr-3">
-                      {customerInfo.preferredName || customerInfo.firstname}
-                    </span>
-                  </div>
-                )}
-                <button
-                  onClick={handleLogoutClick}
-                  className="ml-2 px-5 py-2 border-2 border-red-500 text-red-500 dark:text-red-400 rounded-lg text-sm font-semibold hover:bg-red-500 hover:text-white transition-all hover:shadow-md"
-                >
-                  Logout
-                </button>
-              </>
+              <button
+                onClick={handleLogoutClick}
+                className="ml-4 px-5 py-2 border-2 border-red-500 text-red-500 dark:text-red-400 rounded-lg text-sm font-semibold hover:bg-red-500 hover:text-white transition-all hover:shadow-md"
+              >
+                Logout
+              </button>
             ) : (
               <>
                 <Link

@@ -3,7 +3,7 @@ import Layout from '../components/Layout';
 export default function Contact() {
   return (
     <Layout title="Contact Us | Vault22">
-      <section className="relative bg-gradient-to-br from-white via-vault-green-50 to-white py-16 md:py-20 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-white via-vault-green-50 to-white py-20 md:py-24 overflow-hidden">
         <div className="absolute inset-0 opacity-45">
           <img
             src="/images/backgrounds/hero-contact.jpg"
@@ -13,10 +13,10 @@ export default function Contact() {
           <div className="absolute inset-0 bg-gradient-to-br from-white/45 to-vault-green-50/50" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center px-3 py-1.5 bg-vault-green-50 border border-vault-green-100 rounded-full mb-6">
+          <div className="inline-flex items-center px-3 py-1.5 bg-vault-green-50 border border-vault-green-100 rounded-full mb-8">
             <span className="text-xs font-medium text-vault-green-900">Contact Us</span>
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-display text-vault-black mb-5 leading-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-display text-vault-black mb-8 leading-tight">
             Get In Touch
           </h1>
           <p className="text-base md:text-lg text-vault-gray-600 max-w-2xl mx-auto leading-relaxed">
@@ -25,7 +25,7 @@ export default function Contact() {
         </div>
       </section>
 
-      <section className="py-12 bg-white">
+      <section className="py-20 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-xl p-8 text-center border border-vault-gray-200 shadow-sm">
             <div className="text-4xl mb-4">📧</div>
@@ -43,7 +43,7 @@ export default function Contact() {
             </a>
           </div>
 
-          <div className="mt-10 grid md:grid-cols-2 gap-5 max-w-3xl mx-auto">
+          <div className="mt-12 grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             <div className="text-center p-5 bg-white rounded-lg border border-vault-gray-200 hover:border-vault-gray-300 hover:shadow-sm transition-all">
               <div className="text-3xl mb-2.5">🇿🇦</div>
               <h3 className="font-semibold text-vault-black mb-1.5 text-sm">South Africa</h3>

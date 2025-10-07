@@ -247,7 +247,7 @@ export interface CategoryBudget {
   categoryId: string;
   categoryName: string;
   actual: number;
-  target: number;
+  target: number | null;  // Can be null if no budget/average exists
   isTracked: boolean;
 }
 

@@ -58,7 +58,7 @@ export default function FAQ() {
       description="Find answers to your questions about Vault22's products, services, and features. Get help with savings, investments, and financial management."
     >
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-white via-vault-green-50 to-white py-16 md:py-20 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-white via-vault-green-50 to-white py-20 md:py-24 overflow-hidden">
         <div className="absolute inset-0 opacity-40">
           <img
             src="/images/backgrounds/hero-faq.jpg"
@@ -69,13 +69,13 @@ export default function FAQ() {
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center px-3 py-1.5 bg-vault-green-50 border border-vault-green-100 rounded-full mb-6">
+            <div className="inline-flex items-center px-3 py-1.5 bg-vault-green-50 border border-vault-green-100 rounded-full mb-8">
               <span className="text-xs font-medium text-vault-green-900">Help Centre</span>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-display text-vault-black mb-5 leading-tight">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-display text-vault-black mb-8 leading-tight">
               How Can We Help You?
             </h1>
-            <p className="text-base md:text-lg text-vault-gray-600 max-w-2xl mx-auto leading-relaxed mb-6">
+            <p className="text-base md:text-lg text-vault-gray-600 max-w-2xl mx-auto leading-relaxed mb-8">
               Find answers to your questions about Vault22
             </p>
 
@@ -102,13 +102,13 @@ export default function FAQ() {
       </section>
 
       {/* Browse by Topic */}
-      <section className="py-12 bg-white border-b border-vault-gray-100">
+      <section className="py-16 bg-white border-b border-vault-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold font-display text-vault-black mb-6 text-center">
+          <h2 className="text-2xl font-bold font-display text-vault-black mb-8 text-center">
             Browse by Topic
           </h2>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-10">
             <button
               onClick={() => setSelectedCategory('Getting Started')}
               className={`p-4 rounded-lg transition-colors ${
@@ -202,9 +202,9 @@ export default function FAQ() {
       </section>
 
       {/* Main Content */}
-      <section className="py-12 bg-vault-gray-50">
+      <section className="py-16 bg-vault-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-xl font-bold font-display text-vault-black mb-6">
+          <h2 className="text-xl font-bold font-display text-vault-black mb-8">
             Frequently Asked Questions
           </h2>
 
@@ -297,12 +297,12 @@ export default function FAQ() {
       </section>
 
       {/* Still Need Help */}
-      <section className="py-12 bg-vault-black text-white">
+      <section className="py-24 bg-vault-black text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold font-display mb-3">
+          <h2 className="text-2xl md:text-3xl font-bold font-display mb-6">
             Still Need Help?
           </h2>
-          <p className="text-sm text-vault-gray-300 mb-6">
+          <p className="text-sm text-vault-gray-300 mb-8">
             Can't find what you're looking for? Our support team is here to help.
           </p>
           <a
