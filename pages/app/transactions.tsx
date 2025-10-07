@@ -40,7 +40,7 @@ export default function Transactions() {
     allTransactions,
     filters,
     aggregate,
-    customerInfo?.currentPayPeriod
+    customerInfo?.currentPayPeriod?.toString()
   );
 
   // Handle filter removal

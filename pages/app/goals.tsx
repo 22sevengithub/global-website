@@ -1,7 +1,7 @@
 import AppShell from '../../components/AppShell';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import LoadingAnimation from '../../components/LoadingAnimation';
-import { useState } from 'react';
+import Link from 'next/link';
 import { useApp } from '../../contexts/AppContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { formatMoney } from '../../utils/currency';
@@ -9,7 +9,6 @@ import { formatMoney } from '../../utils/currency';
 export default function Goals() {
   const { aggregate, customerInfo, loading } = useApp();
   const { selectedCurrency } = useCurrency();
-  const [showAddModal, setShowAddModal] = useState(false);
 
   if (loading || !aggregate) {
     return (
@@ -106,15 +105,15 @@ export default function Goals() {
               Needs Attention
             </button>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
+          <Link
+            href="/app/goals/create/select-type"
             className="px-6 py-2 bg-vault-green text-vault-black dark:text-white rounded-full font-semibold hover:bg-vault-green-light transition-all hover:shadow-lg flex items-center"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
             New Goal
-          </button>
+          </Link>
         </div>
 
         {/* Goals Grid */}
@@ -124,12 +123,12 @@ export default function Goals() {
               <div className="text-6xl mb-4">🎯</div>
               <h3 className="text-2xl font-bold text-vault-black dark:text-white mb-2">No Goals Yet</h3>
               <p className="text-vault-gray-600 dark:text-vault-gray-400 mb-6">Start setting financial goals to track your progress</p>
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="px-6 py-3 bg-vault-green text-vault-black dark:text-white rounded-full font-semibold hover:bg-vault-green-light transition-all"
+              <Link
+                href="/app/goals/create/select-type"
+                className="px-6 py-3 bg-vault-green text-vault-black dark:text-white rounded-full font-semibold hover:bg-vault-green-light transition-all inline-block"
               >
                 Create Your First Goal
-              </button>
+              </Link>
             </div>
           ) : (
             goals.map((goal, index) => {
@@ -228,46 +227,6 @@ export default function Goals() {
           )}
         </div>
 
-        {/* Add Goal Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-vault-gray-800 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-vault-black dark:text-white">Create New Goal</h2>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="p-2 hover:bg-vault-gray-100 dark:hover:bg-vault-gray-600 rounded-lg transition-all"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3 mb-6">
-                {[
-                  { type: 'Emergency', icon: '🛡️' },
-                  { type: 'Retirement', icon: '🌴' },
-                  { type: 'Travel', icon: '✈️' },
-                  { type: 'Home', icon: '🏡' },
-                  { type: 'Vehicle', icon: '🚗' },
-                  { type: 'Education', icon: '🎓' },
-                  { type: 'Wedding', icon: '💍' },
-                  { type: 'Investment', icon: '📈' },
-                  { type: 'Custom', icon: '🎯' }
-                ].map((type) => (
-                  <button
-                    key={type.type}
-                    className="p-4 border-2 border-vault-gray-200 dark:border-vault-gray-700 rounded-xl hover:border-vault-green hover:bg-vault-green/5 transition-all text-center"
-                  >
-                    <span className="text-3xl block mb-2">{type.icon}</span>
-                    <span className="text-sm font-semibold text-vault-gray-700 dark:text-vault-gray-300">{type.type}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
       </AppShell>
     </ProtectedRoute>
   );

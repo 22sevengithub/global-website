@@ -50,21 +50,7 @@ export default function AppShell({
     { href: '/app/more', label: 'More', icon: 'ic_setting' },
   ];
 
-  // Auto-logout when navigating away from app routes
-  useEffect(() => {
-    const handleRouteChange = async (url: string) => {
-      // If navigating from /app/* to non-app route, logout
-      if (router.pathname.startsWith('/app') && !url.startsWith('/app')) {
-        logout();
-      }
-    };
-
-    router.events.on('routeChangeStart', handleRouteChange);
-
-    return () => {
-      router.events.off('routeChangeStart', handleRouteChange);
-    };
-  }, [router, logout]);
+  // NOTE: Auto-logout removed - users must explicitly confirm exit via More page
 
   const handleBack = () => {
     // If there's history, go back

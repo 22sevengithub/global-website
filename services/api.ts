@@ -441,26 +441,8 @@ export const exchangeRateApi = {
 };
 
 // Service Provider API (for account linking)
+// NOTE: Service providers come from aggregate data, not a separate endpoint
 export const serviceProviderApi = {
-  /**
-   * Get all available service providers (banks, financial institutions)
-   */
-  getProviders: async () => {
-    console.log('🏦 Fetching service providers...');
-    const response = await apiClient.get('/api/service-providers');
-    console.log('✅ Service providers received:', response.data?.length || 0);
-    return response.data;
-  },
-
-  /**
-   * Get details for a specific service provider
-   */
-  getProvider: async (providerId: string) => {
-    console.log(`🏦 Fetching provider: ${providerId}`);
-    const response = await apiClient.get(`/api/service-providers/${providerId}`);
-    return response.data;
-  },
-
   /**
    * Link account via service provider (open banking)
    */

@@ -36,6 +36,8 @@ export interface Account {
   friendlyName?: string;
   customName?: string;
   accountIcon?: string;
+  providerLoginId?: string;  // Added: Used to identify account provider ("ULTRA THINK" for manual accounts)
+  serviceProviderId?: string;  // Added: Service provider ID for linked accounts
   deactivated: boolean;
   isDeleted: boolean;
   currencyCode?: string;  // Added: direct currency field on account
@@ -45,6 +47,7 @@ export interface Account {
   have?: Money;  // Added: used for net worth calculation
   owe?: Money;   // Added: used for net worth calculation
   totalCreditLine?: Money;
+  refreshStatus?: number;  // Added: Refresh status for linked accounts
   lastSuccessfulRefreshDate?: string;
   includeInNav: boolean;
   sortOrder: number;
@@ -57,6 +60,7 @@ export interface Transaction {
   accountId: string;
   categoryId?: string;
   merchantId?: string;
+  spendingGroupId?: string;  // Added: spending group ID for filtering
   description: string;
   transactionDate: string;
   amount: Money;
@@ -192,6 +196,7 @@ export interface Product {
   isShariahCompliant: boolean;
   riskLevel: string;
   minimumInvestment: number;
+  expectedReturn?: string;  // Expected return rate/description
   fees: ProductFee[];
 }
 
@@ -217,6 +222,40 @@ export interface Profile {
   supportedCurrencies?: Currency[];
 }
 
+export interface ServiceProvider {
+  id: string;
+  ttsId: string;
+  name: string;
+  siteId?: number;
+  multiFactorAuthenticationRequired?: boolean;
+  multiFactorAuthenticationInputLabel?: string;
+  copy?: string;
+  countryCode?: string;
+  rewardsFactor?: number;
+  isBeta?: boolean;
+  sortOrder?: number;
+  loginMessage?: string;
+  refreshEnabled?: boolean;
+  canUploadStatement?: boolean;
+  supportedStatementFormats?: string;
+  canLink?: boolean;
+  authType?: string;
+  authLoginUrlTemplate?: string;
+  accountLoginForm?: {
+    accountLoginFields: Array<{
+      label: string;
+      dataType: string;
+      optional: boolean;
+      secure?: boolean;
+    }>;
+  };
+  logo?: string;
+  logoUrl?: string;
+  integrationProviderOriginId?: string;
+  integrationProvider?: string;
+  preventRelinkWhileProcessing?: boolean;
+}
+
 export interface Aggregate {
   transactions: Transaction[];
   customerInfo: CustomerInfo;
@@ -230,6 +269,7 @@ export interface Aggregate {
   financialHealthScores: FinancialHealthScore[];
   products: Product[];
   goals: Goal[];
+  serviceProviders: ServiceProvider[];
   profile?: Profile;
   supportedCurrencies?: Currency[];
   baseCurrency?: string;

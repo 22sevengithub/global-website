@@ -1,10 +1,10 @@
 import { TransactionFilterModel, QuickFilterOption, getFilterChipLabel } from '../types/transactionFilters';
-import { CustomerAggregate } from '../types';
+import { Aggregate } from '../types';
 import { formatMoney } from '../utils/currency';
 
 interface FilterChipsProps {
   filters: TransactionFilterModel;
-  aggregate: CustomerAggregate;
+  aggregate: Aggregate;
   currency: string;
   onRemoveFilter: (filterType: string, value?: any) => void;
 }
