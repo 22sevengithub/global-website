@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "docker:build": "docker build -t nextjs-frontend .",
-    "docker:run": "docker run -p 3000:3000 nextjs-frontend"
+    "docker:run": "docker run -p 3000:3000 nextjs-frontend",
+    "prepare": "husky"
   },
   "dependencies": {
     "@microsoft/signalr": "^9.0.6",
@@ -30,6 +31,7 @@
     "autoprefixer": "^10.4.16",
     "eslint": "8.57.0",
     "eslint-config-next": "14.2.5",
+    "husky": "^9.1.7",
     "postcss": "^8.4.31",
     "tailwindcss": "^3.4.1"
   }

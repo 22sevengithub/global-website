@@ -622,6 +622,37 @@ export const goalsApi = {
     );
     return response.data;
   },
+
+  /**
+   * Create goal investment
+   * POST /customer/{customerId}/goal-investments
+   */
+  postGoalInvestments: async (customerId: string, investmentData: any) => {
+    console.log('[Goals API] Creating goal investment:', investmentData);
+    const response = await apiClient.post(`/customer/${customerId}/goal-investments`, investmentData);
+    console.log('[Goals API] Investment created:', response.data);
+    return response.data;
+  },
+
+  /**
+   * Update goal investment
+   * PUT /customer/{customerId}/goal-investments/{goalId}
+   */
+  putGoalInvestments: async (customerId: string, goalId: string, investmentData: any) => {
+    console.log('[Goals API] Updating goal investment:', goalId);
+    const response = await apiClient.put(`/customer/${customerId}/goal-investments/${goalId}`, investmentData);
+    console.log('[Goals API] Investment updated:', response.data);
+    return response.data;
+  },
+
+  /**
+   * Mark goal reached popup as shown
+   * PUT /customer/{customerId}/goals/mark-reached-popup/{goalId}
+   */
+  markReachedPopup: async (customerId: string, goalId: string) => {
+    const response = await apiClient.put(`/customer/${customerId}/goals/mark-reached-popup/${goalId}`);
+    return response.data;
+  },
 };
 
 // Exchange Rate Functions

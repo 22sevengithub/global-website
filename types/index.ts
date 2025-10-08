@@ -243,6 +243,7 @@ export interface Product {
   minimumInvestment: number;
   expectedReturn?: string;  // Expected return rate/description
   fees: ProductFee[];
+  iconUrl?: string;  // Product icon/logo URL
 }
 
 export interface ProductFee {
