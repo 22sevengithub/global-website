@@ -75,22 +75,27 @@ export default function CustomYourGoal() {
     setError('');
 
     try {
-      // Create goal with name and icon (matching webapp implementation)
+      // Create goal with name and icon (matching mobile app exactly)
       const createGoalData: any = {
         name: goalName.trim(),
         iconUrl: selectedIcon.icon || selectedIcon.iconUrl || '', // Use emoji icon
+        isShariahCompliant: false, // CRITICAL: Backend requires this field
       };
 
       // Only include wealthAccountInvestmentId if we have a product (not for regular goals)
-      // Don't send null or false values - API rejects them
+      // Don't send null or false values for optional fields
 
-      console.log('🎯 Creating goal with data:', createGoalData);
+      console.log('🎯 [Goal Create] Sending request:', createGoalData);
       const response = await goalsApi.createGoal(customerInfo.id, createGoalData);
-      console.log('✅ Goal created successfully:', response);
+      console.log('✅ [Goal Create] Response received:', response);
 
-      if (!response.id) {
-        throw new Error('Failed to get goal ID from response');
+      // Backend returns the goal ID - verify we got it
+      if (!response || !response.id) {
+        console.error('❌ [Goal Create] Invalid response - missing goal ID:', response);
+        throw new Error('Backend did not return a valid goal ID');
       }
+
+      console.log('✅ [Goal Create] Goal ID:', response.id);
 
       // Navigate to questionnaires with the goal ID
       router.push({
