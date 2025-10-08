@@ -40,7 +40,11 @@ export default function Login() {
 
     try {
       const formattedPhone = formatPhoneNumber(phoneNumber);
+      console.log('[OTP Request] Formatted phone:', formattedPhone);
+      console.log('[OTP Request] Original phone:', phoneNumber);
+
       const response = await authApi.requestLoginOTP(formattedPhone);
+      console.log('[OTP Response]', response);
 
       if (response.succeed) {
         setStep('otp');
@@ -49,7 +53,13 @@ export default function Login() {
         setError(response.message || 'Failed to send OTP');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
+      console.error('[OTP Error] Full error:', err);
+      console.error('[OTP Error] Response data:', err.response?.data);
+      console.error('[OTP Error] Response status:', err.response?.status);
+      console.error('[OTP Error] Request config:', err.config);
+
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to send OTP. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -120,13 +130,39 @@ export default function Login() {
     setError('');
 
     try {
+      console.log('[Login] Attempting email/password login...');
+      console.log('[Login] Email:', email);
+
       const response = await authApi.login(email, password);
 
-      setAuthenticated(true, response.customerId);
-      router.push('/app/dashboard');
+      console.log('[Login] Login response:', response);
+
+      if (response.sessionToken && response.requestToken && response.customerId) {
+        console.log('[Login] Login successful, setting authenticated state...');
+        setAuthenticated(true, response.customerId);
+        console.log('[Login] Navigating to dashboard...');
+        router.push('/app/dashboard');
+      } else {
+        console.error('[Login] Invalid response - missing tokens:', response);
+        setError('Login failed - invalid response from server');
+      }
     } catch (err: any) {
-      console.error('Email login error:', err);
-      setError(err.response?.data?.error || err.message || 'Invalid email or password');
+      console.error('[Login] Email login error:', err);
+      console.error('[Login] Error response:', err.response);
+      console.error('[Login] Error data:', err.response?.data);
+
+      // Better error messages
+      if (err.response?.status === 401) {
+        setError('Invalid email or password. Please try again.');
+      } else if (err.response?.status === 404) {
+        setError('Account not found. Please check your email.');
+      } else if (err.response?.status === 500) {
+        setError('Server error. Please try again later.');
+      } else if (err.message?.includes('Network Error')) {
+        setError('Cannot connect to server. Please check your internet connection.');
+      } else {
+        setError(err.response?.data?.error || err.response?.data?.message || err.message || 'Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -369,6 +405,35 @@ export default function Login() {
                   <p className="text-center text-sm text-vault-gray-600 dark:text-vault-gray-400 mb-4">
                     Need help? Contact support
                   </p>
+
+                  {/* Demo/Test Login Button */}
+                  <div className="mt-4">
+                    <button
+                      onClick={async () => {
+                        setLoading(true);
+                        setError('');
+                        try {
+                          // Use demo credentials (matches mobile app pattern)
+                          const response = await authApi.login('demo@vault22.com', 'Demo123!@#');
+
+                          if (response.sessionToken) {
+                            setAuthenticated(true, response.customerId);
+                            router.push('/app/dashboard');
+                          } else {
+                            setError('Demo login failed. Please try regular login.');
+                          }
+                        } catch (err: any) {
+                          console.error('Demo login error:', err);
+                          setError('Demo login unavailable. Please use your credentials.');
+                        } finally {
+                          setLoading(false);
+                        }
+                      }}
+                      className="w-full px-4 py-2 bg-vault-gray-100 dark:bg-vault-gray-700 text-vault-gray-700 dark:text-vault-gray-200 rounded-lg hover:bg-vault-gray-200 dark:hover:bg-vault-gray-600 transition-all text-sm font-medium"
+                    >
+                      🚀 Try Demo Account
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

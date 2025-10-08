@@ -108,7 +108,8 @@ export interface Category {
   description: string;
   isCustom: boolean;
   isDeleted: boolean;
-  spendingGroupId?: string;
+  // NOTE: Categories do NOT have spendingGroupId field in the backend
+  // The relationship is determined through CategoryTotal objects which have both categoryId and spendingGroupId
 }
 
 export interface SpendingGroup {
@@ -136,6 +137,28 @@ export interface CategoryTotal {
   isTrackedForPayPeriod: boolean;
   alertsEnabled: boolean;
   applyOnlyToCurrentPeriod: boolean;
+}
+
+// TrackedCategory API payload (matches Flutter mobile app exactly)
+export interface TrackedCategory {
+  amount: Money;              // Budget amount as Money object
+  isTracked: boolean;         // Always true when adding budget
+  validFrom: number;          // Pay period (YYYYMM format, e.g., 202411)
+  customerId?: string;        // Optional - backend fills this
+  alertsEnabled: boolean;     // Spending alerts enabled
+  applyOnlyToCurrentPeriod: boolean;  // Budget for current period only
+  category: {
+    id: string;               // Category ID (ttsId)
+    description: string;      // Empty string for add
+    isDeleted: boolean;       // Always false
+    isCustom: boolean;        // Always false
+    hasPlanned: boolean;      // Always false
+  };
+  spendingGroup: {
+    id: string;               // Spending group ID (ttsId)
+    description: string;      // Empty string for add
+  };
+  id?: string;                // Budget ID (null for new budget)
 }
 
 export interface Goal {

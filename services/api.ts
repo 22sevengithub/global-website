@@ -170,7 +170,7 @@ export const authApi = {
   requestLoginOTP: async (phoneNumber: string, dialCode: string = '+971') => {
     const platformInfo = getPlatformInfo();
 
-    const response = await apiClient.post('/api/auth/otp/request', {
+    const payload = {
       countryCallingCode: dialCode,
       phoneNumber: phoneNumber,
       appCountryCode: 'ARE', // ISO 3166-1 alpha-3 (3 characters)
@@ -183,7 +183,12 @@ export const authApi = {
       },
       pushToken: null,
       pushProvider: 'FLUTTER_FCM',
-    });
+    };
+
+    console.log('[API] OTP Request Payload:', JSON.stringify(payload, null, 2));
+    console.log('[API] API Base URL:', API_BASE_URL);
+
+    const response = await apiClient.post('/api/auth/otp/request', payload);
 
     return response.data;
   },
@@ -224,6 +229,100 @@ export const authApi = {
   },
 };
 
+// Helper function to extract amount from Money object
+const extractMoney = (moneyObj: any): number | undefined => {
+  if (!moneyObj) return undefined;
+  return moneyObj.amount;
+};
+
+// Transform backend CategoryTotal (with Money objects) to web app format (flat numbers)
+const transformCategoryTotals = (backendCategoryTotals: any[]): any[] => {
+  if (!backendCategoryTotals) return [];
+
+  return backendCategoryTotals.map(ct => ({
+    id: ct.id,
+    ttsId: ct.id,
+    customerId: ct.customerId,
+    categoryId: ct.categoryId,
+    spendingGroupId: ct.spendingGroupId,
+    categoryDescription: ct.categoryDescription,
+    spendingGroupDescription: ct.spendingGroupDescription,
+    payPeriod: ct.payPeriod,
+
+    // CRITICAL FIX: Extract .amount from Money objects
+    // Backend sends: { "total": { "amount": 100, "currencyCode": "ZAR" } }
+    // Web app needs: { "totalAmount": 100 }
+    totalAmount: extractMoney(ct.total) || 0,
+    averageAmount: extractMoney(ct.average),
+    plannedAmount: extractMoney(ct.plannedAmount),
+    previousPlannedAmount: extractMoney(ct.previousPlannedAmount),
+
+    isTrackedCategory: ct.isTrackedCategory || false,
+    isTrackedForPayPeriod: ct.isTrackedForPayPeriod || false,
+    alertsEnabled: ct.alertsEnabled || false,
+    applyOnlyToCurrentPeriod: ct.applyOnlyToCurrentPeriod || false,
+  }));
+};
+
+// Transform backend Transactions (with Money objects) to web app format
+const transformTransactions = (backendTransactions: any[]): any[] => {
+  if (!backendTransactions) return [];
+
+  return backendTransactions.map(tx => ({
+    ...tx,
+    // Transform amount Money object to keep both object and extract values
+    amount: {
+      amount: extractMoney(tx.amount) || 0,
+      currencyCode: tx.amount?.currencyCode || 'ZAR',
+      debitOrCredit: tx.amount?.debitOrCredit || 'debit',
+    },
+    originalAmount: tx.originalAmount ? {
+      amount: extractMoney(tx.originalAmount) || 0,
+      currencyCode: tx.originalAmount?.currencyCode || 'ZAR',
+      debitOrCredit: tx.originalAmount?.debitOrCredit || 'debit',
+    } : undefined,
+  }));
+};
+
+// Transform backend Accounts (with Money objects) to web app format
+const transformAccounts = (backendAccounts: any[]): any[] => {
+  if (!backendAccounts) return [];
+
+  return backendAccounts.map(acc => ({
+    ...acc,
+    currentBalance: acc.currentBalance ? {
+      amount: extractMoney(acc.currentBalance) || 0,
+      currencyCode: acc.currentBalance?.currencyCode || 'ZAR',
+      debitOrCredit: acc.currentBalance?.debitOrCredit || 'debit',
+    } : undefined,
+    availableBalance: acc.availableBalance ? {
+      amount: extractMoney(acc.availableBalance) || 0,
+      currencyCode: acc.availableBalance?.currencyCode || 'ZAR',
+      debitOrCredit: acc.availableBalance?.debitOrCredit || 'debit',
+    } : undefined,
+    budgetBalance: acc.budgetBalance ? {
+      amount: extractMoney(acc.budgetBalance) || 0,
+      currencyCode: acc.budgetBalance?.currencyCode || 'ZAR',
+      debitOrCredit: acc.budgetBalance?.debitOrCredit || 'debit',
+    } : undefined,
+    have: acc.have ? {
+      amount: extractMoney(acc.have) || 0,
+      currencyCode: acc.have?.currencyCode || 'ZAR',
+      debitOrCredit: acc.have?.debitOrCredit || 'credit',
+    } : undefined,
+    owe: acc.owe ? {
+      amount: extractMoney(acc.owe) || 0,
+      currencyCode: acc.owe?.currencyCode || 'ZAR',
+      debitOrCredit: acc.owe?.debitOrCredit || 'debit',
+    } : undefined,
+    totalCreditLine: acc.totalCreditLine ? {
+      amount: extractMoney(acc.totalCreditLine) || 0,
+      currencyCode: acc.totalCreditLine?.currencyCode || 'ZAR',
+      debitOrCredit: acc.totalCreditLine?.debitOrCredit || 'credit',
+    } : undefined,
+  }));
+};
+
 // Customer Functions
 export const customerApi = {
   /**
@@ -240,7 +339,24 @@ export const customerApi = {
 
     const response = await apiClient.get(`/customer/${customerId}/aggregate`, { params });
 
-    console.log('✅ Aggregate data fetched successfully');
+    // Transform all Money objects to ensure proper format
+    if (response.data) {
+      console.log('🔧 Transforming aggregate data: extracting amounts from Money objects...');
+
+      if (response.data.categoryTotals) {
+        response.data.categoryTotals = transformCategoryTotals(response.data.categoryTotals);
+      }
+
+      if (response.data.transactions) {
+        response.data.transactions = transformTransactions(response.data.transactions);
+      }
+
+      if (response.data.accounts) {
+        response.data.accounts = transformAccounts(response.data.accounts);
+      }
+    }
+
+    console.log('✅ Aggregate data fetched and transformed successfully');
     return response.data;
   },
 
@@ -412,18 +528,21 @@ export const transactionApi = {
 // Budget Functions
 export const budgetApi = {
   /**
-   * Update tracked categories (set budgets)
+   * Update tracked categories (add or modify budgets)
+   * PUT /customer/{customerId}/trackedCategories
+   *
+   * IMPORTANT: This endpoint expects a SINGLE TrackedCategory object, NOT an array
+   * Matches Flutter mobile app implementation exactly
    */
-  updateTrackedCategories: async (customerId: string, trackedCategories: Array<{
-    categoryId: string;
-    isTracked: boolean;
-    plannedAmount: any;
-    alertsEnabled: boolean;
-    applyOnlyToCurrentPeriod: boolean;
-  }>) => {
-    const response = await apiClient.put(`/customer/${customerId}/trackedCategories`, {
-      trackedCategories,
-    });
+  updateTrackedCategories: async (customerId: string, trackedCategory: any) => {
+    console.log('[Budget API] Sending tracked category payload:', JSON.stringify(trackedCategory, null, 2));
+
+    const response = await apiClient.put(
+      `/customer/${customerId}/trackedCategories`,
+      trackedCategory  // Send single object, not wrapped in array
+    );
+
+    console.log('[Budget API] Update successful:', response.data);
     return response.data;
   },
 };

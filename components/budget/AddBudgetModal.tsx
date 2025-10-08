@@ -3,6 +3,10 @@ import { SpendingGroup, Category } from '../../types';
 import { getSpendingGroupIcon, getSpendingGroupColor } from '../../utils/spendingGroupIcons';
 import Image from 'next/image';
 import { budgetApi } from '../../services/api';
+import { useCurrency } from '../../contexts/CurrencyContext';
+import { useApp } from '../../contexts/AppContext';
+import { convertCurrency } from '../../utils/currency';
+import { getCurrentPayPeriod } from '../../utils/payPeriod';
 
 interface AddBudgetModalProps {
   isOpen: boolean;
@@ -21,6 +25,8 @@ export default function AddBudgetModal({
   customerId,
   onSuccess,
 }: AddBudgetModalProps) {
+  const { selectedCurrency } = useCurrency();
+  const { aggregate, customerInfo } = useApp();
   const [step, setStep] = useState(1); // 1, 2, or 3
   const [selectedSpendingGroupId, setSelectedSpendingGroupId] = useState<string>('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
@@ -31,10 +37,30 @@ export default function AddBudgetModal({
 
   if (!isOpen) return null;
 
-  // Filter categories by selected spending group
-  const filteredCategories = categories.filter(
-    cat => cat.spendingGroupId === selectedSpendingGroupId && !cat.isDeleted
+  // CRITICAL FIX: Categories don't have spendingGroupId field
+  // We need to get unique categories from CategoryTotals for the selected spending group
+  const { categoryTotals = [] } = aggregate || {};
+
+  // Get unique category IDs from categoryTotals for this spending group
+  const categoryIdsForGroup = Array.from(
+    new Set(
+      categoryTotals
+        .filter(ct => ct.spendingGroupId === selectedSpendingGroupId)
+        .map(ct => ct.categoryId)
+    )
   );
+
+  // Filter categories to only show those that exist in categoryTotals for this spending group
+  const filteredCategories = categories.filter(
+    cat => categoryIdsForGroup.includes(cat.id) && !cat.isDeleted
+  );
+
+  // Debug logging
+  if (step === 2 && filteredCategories.length === 0) {
+    console.log('[AddBudget] No categories found for spending group:', selectedSpendingGroupId);
+    console.log('[AddBudget] CategoryTotals for this group:', categoryTotals.filter(ct => ct.spendingGroupId === selectedSpendingGroupId).length);
+    console.log('[AddBudget] Total categories:', categories.length);
+  }
 
   // Exclude Income spending group
   const availableSpendingGroups = spendingGroups.filter(
@@ -75,15 +101,55 @@ export default function AddBudgetModal({
     setError('');
 
     try {
-      await budgetApi.updateTrackedCategories(customerId, [
-        {
-          categoryId: selectedCategoryId,
-          isTracked: true,
-          plannedAmount: amount,
-          alertsEnabled: false,
-          applyOnlyToCurrentPeriod: onlyCurrentPeriod,
+      // CRITICAL: Convert display currency to ZAR for backend (matches mobile app)
+      const DEFAULT_CURRENCY_CODE = 'ZAR';
+      const amountInZar = convertCurrency(
+        amount,
+        selectedCurrency,
+        DEFAULT_CURRENCY_CODE,
+        aggregate?.exchangeRates || []
+      ) || amount;
+
+      console.log('[AddBudget] Display currency:', selectedCurrency);
+      console.log('[AddBudget] Display amount:', amount);
+      console.log('[AddBudget] ZAR amount (for backend):', amountInZar);
+
+      // Get current pay period (matches mobile app)
+      const dayOfMonthPaid = customerInfo?.dayOfMonthPaid || 1;
+      const currentPayPeriod = getCurrentPayPeriod(dayOfMonthPaid);
+
+      // CRITICAL FIX: Get spending group ID from selectedSpendingGroupId (not from category)
+      // Categories don't have spendingGroupId field - we track it separately in the UI flow
+
+      // Construct payload matching Flutter mobile app EXACTLY
+      const trackedCategory = {
+        amount: {
+          amount: amountInZar,
+          currencyCode: DEFAULT_CURRENCY_CODE,
+          debitOrCredit: '',
         },
-      ]);
+        isTracked: true,
+        validFrom: currentPayPeriod,  // CRITICAL: Pay period field
+        customerId: undefined,  // Backend fills this
+        alertsEnabled: false,
+        applyOnlyToCurrentPeriod: onlyCurrentPeriod,
+        category: {
+          id: selectedCategoryId,
+          description: '',
+          isDeleted: false,
+          isCustom: false,
+          hasPlanned: false,
+        },
+        spendingGroup: {
+          id: selectedSpendingGroupId,  // Use the selected spending group ID from Step 1
+          description: '',
+        },
+        id: undefined,  // Null for new budget
+      };
+
+      console.log('[AddBudget] Payload structure:', JSON.stringify(trackedCategory, null, 2));
+
+      await budgetApi.updateTrackedCategories(customerId, trackedCategory);
 
       // Reset and close
       setStep(1);
@@ -93,9 +159,10 @@ export default function AddBudgetModal({
       setOnlyCurrentPeriod(false);
       onSuccess();
       onClose();
-    } catch (err) {
-      setError('Failed to add budget. Please try again.');
-      console.error('Budget add error:', err);
+    } catch (err: any) {
+      console.error('[AddBudget] Error details:', err);
+      console.error('[AddBudget] Error response:', err.response?.data);
+      setError(err.response?.data?.message || 'Failed to add budget. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -191,13 +258,24 @@ export default function AddBudgetModal({
           {step === 2 && (
             <div className="space-y-2">
               {filteredCategories.length === 0 ? (
-                <p className="text-center text-gray-500 dark:text-thanos-400 py-8">
-                  No categories found for this spending group
-                </p>
+                <div className="text-center py-8">
+                  <p className="text-gray-500 dark:text-thanos-400 mb-4">
+                    No categories found for this spending group
+                  </p>
+                  <button
+                    onClick={() => setStep(1)}
+                    className="text-sm text-bulbasaur-500 hover:text-bulbasaur-600"
+                  >
+                    ← Go back and select different group
+                  </button>
+                  <div className="mt-4 text-xs text-gray-400">
+                    Debug: Selected ID = {selectedSpendingGroupId}
+                  </div>
+                </div>
               ) : (
                 filteredCategories.map((category) => {
-                  const sg = spendingGroups.find(g => g.id === category.spendingGroupId);
-                  const color = getSpendingGroupColor(sg?.id);
+                  // Use selectedSpendingGroupId since categories don't have spendingGroupId field
+                  const color = getSpendingGroupColor(selectedSpendingGroupId);
 
                   return (
                     <button

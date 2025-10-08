@@ -7,14 +7,23 @@ import { useApp } from '../../contexts/AppContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { getCurrentPayPeriod, getDaysRemainingInPeriod, formatPayPeriod, getStartDateOfPayPeriod, getEndDateOfPayPeriod } from '../../utils/payPeriod';
 import { getBudgetBreakdown, calculateBudgetProgress, getBudgetAlertLevel, getCurrentBudgetBreakdown, getCategoriesWithValues, getBudgetedOrAverageAmount } from '../../utils/budget';
-import { formatMoney } from '../../utils/currency';
+import { formatMoney, convertCurrency } from '../../utils/currency';
 import { isIncomeGroup, getSpendingGroupIcon, getSpendingGroupColor } from '../../utils/spendingGroups';
 import AddBudgetModal from '../../components/budget/AddBudgetModal';
+import EditBudgetModal from '../../components/budget/EditBudgetModal';
+import { CategoryTotal } from '../../types';
 
 export default function Budget() {
   const { aggregate, customerInfo, loading, loadAggregate } = useApp();
   const { selectedCurrency } = useCurrency();
   const [showAddBudgetModal, setShowAddBudgetModal] = useState(false);
+  const [showEditBudgetModal, setShowEditBudgetModal] = useState(false);
+  const [selectedCategoryTotal, setSelectedCategoryTotal] = useState<CategoryTotal | null>(null);
+
+  const handleEditBudget = (categoryTotal: CategoryTotal) => {
+    setSelectedCategoryTotal(categoryTotal);
+    setShowEditBudgetModal(true);
+  };
 
   if (loading || !aggregate) {
     return (
@@ -68,27 +77,81 @@ export default function Budget() {
   }
 
   // Get budget breakdown by spending groups (EXCLUDES INCOME automatically)
-  const budgetBreakdown = getBudgetBreakdown(aggregate.categoryTotals, currentPayPeriod)
+  const DEFAULT_CURRENCY_CODE = 'ZAR';
+  const budgetBreakdownRaw = getBudgetBreakdown(aggregate.categoryTotals, currentPayPeriod)
     .filter(group => !isIncomeGroup(group.spendingGroupId)); // Filter out income group
 
+  // Convert spending group totals to display currency
+  const budgetBreakdown = budgetBreakdownRaw.map(group => ({
+    ...group,
+    actualSpending: convertCurrency(
+      group.actualSpending,
+      DEFAULT_CURRENCY_CODE,
+      currency,
+      aggregate.exchangeRates
+    ) || group.actualSpending,
+    targetAmount: convertCurrency(
+      group.targetAmount,
+      DEFAULT_CURRENCY_CODE,
+      currency,
+      aggregate.exchangeRates
+    ) || group.targetAmount
+  }));
+
   // Calculate totals using getCurrentBudgetBreakdown (EXCLUDES INCOME automatically)
-  const budgetSummary = getCurrentBudgetBreakdown(aggregate.categoryTotals, currentPayPeriod);
-  const totalBudget = budgetSummary.totalBudgeted;
-  const totalSpent = budgetSummary.totalSpent;
-  const remaining = budgetSummary.remaining;
-  const percentUsed = budgetSummary.percentUsed;
+  const budgetSummaryRaw = getCurrentBudgetBreakdown(aggregate.categoryTotals, currentPayPeriod);
+
+  // Convert summary totals to display currency
+  const totalBudget = convertCurrency(
+    budgetSummaryRaw.totalBudgeted,
+    DEFAULT_CURRENCY_CODE,
+    currency,
+    aggregate.exchangeRates
+  ) || budgetSummaryRaw.totalBudgeted;
+
+  const totalSpent = convertCurrency(
+    budgetSummaryRaw.totalSpent,
+    DEFAULT_CURRENCY_CODE,
+    currency,
+    aggregate.exchangeRates
+  ) || budgetSummaryRaw.totalSpent;
+
+  const remaining = totalBudget - totalSpent;
+  const percentUsed = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
   // Get individual categories (EXCLUDE INCOME)
   const budgetCategories = allCategoryTotals
     .filter(ct => !isIncomeGroup(ct.spendingGroupId)) // Exclude income categories
     .map(ct => {
       const category = aggregate.categories.find(c => c.id === ct.categoryId);
-      const spendingGroup = aggregate.spendingGroups.find(sg => sg.id === category?.spendingGroupId);
+      // CRITICAL FIX: Get spending group from CategoryTotal, not from Category
+      const spendingGroup = aggregate.spendingGroups.find(sg => sg.id === ct.spendingGroupId);
+
+      // Get budget or average in ZAR from backend
+      const budgetAmountZar = getBudgetedOrAverageAmount(ct) ?? 0;
+
+      // Convert to display currency
+      const budgetAmountDisplay = convertCurrency(
+        budgetAmountZar,
+        DEFAULT_CURRENCY_CODE,
+        currency,
+        aggregate.exchangeRates
+      ) || budgetAmountZar;
+
+      // Convert total spending to display currency
+      const totalAmountDisplay = convertCurrency(
+        ct.totalAmount,
+        DEFAULT_CURRENCY_CODE,
+        currency,
+        aggregate.exchangeRates
+      ) || ct.totalAmount;
+
       return {
         ...ct,
         categoryName: category?.description || 'Uncategorized',
         spendingGroupName: spendingGroup?.description || 'Other',
-        budgetAmount: getBudgetedOrAverageAmount(ct) ?? 0  // Use shared function
+        budgetAmount: budgetAmountDisplay,
+        totalAmount: totalAmountDisplay
       };
     })
     .sort((a, b) => b.totalAmount - a.totalAmount);
@@ -229,7 +292,8 @@ export default function Budget() {
               return (
                 <div
                   key={category.id}
-                  className="pb-6 border-b border-gray-200 dark:border-thanos-700 last:border-0"
+                  onClick={() => handleEditBudget(category)}
+                  className="pb-6 border-b border-gray-200 dark:border-thanos-700 last:border-0 cursor-pointer hover:bg-gray-50 dark:hover:bg-thanos-700 -mx-2 px-2 py-2 rounded-lg transition-all duration-200"
                   style={{ animation: `fadeInUp 0.3s ease-out ${0.6 + index * 0.1}s both` }}
                 >
                   <div className="flex items-center justify-between mb-3">
@@ -332,6 +396,21 @@ export default function Budget() {
           customerId={customerInfo?.id || ''}
           onSuccess={() => {
             // Reload aggregate data to show new budget
+            loadAggregate();
+          }}
+        />
+
+        {/* Edit Budget Modal */}
+        <EditBudgetModal
+          isOpen={showEditBudgetModal}
+          onClose={() => {
+            setShowEditBudgetModal(false);
+            setSelectedCategoryTotal(null);
+          }}
+          categoryTotal={selectedCategoryTotal}
+          customerId={customerInfo?.id || ''}
+          onSuccess={() => {
+            // Reload aggregate data to show updated budget
             loadAggregate();
           }}
         />
