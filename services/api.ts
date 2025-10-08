@@ -588,6 +588,7 @@ export const investmentStyleApi = {
 export const goalsApi = {
   /**
    * Get all goals
+   * GET /customer/{customerId}/goals/all
    */
   getAllGoals: async (customerId: string, isNoGoal: boolean = false) => {
     const response = await apiClient.get(`/customer/${customerId}/goals/all`, {
@@ -597,29 +598,197 @@ export const goalsApi = {
   },
 
   /**
-   * Create goal
+   * Get goal by ID
+   * GET /customer/{customerId}/goals/{goalId}
    */
-  createGoal: async (customerId: string, goalData: any) => {
-    const response = await apiClient.post(`/customer/${customerId}/goals`, goalData);
+  getGoalById: async (customerId: string, goalId: string) => {
+    const response = await apiClient.get(`/customer/${customerId}/goals/${goalId}`);
     return response.data;
   },
 
   /**
-   * Setup goal
+   * Get goals grouped by category
+   * GET /customer/{customerId}/goals/groups
+   */
+  getGoalGroups: async (customerId: string) => {
+    const response = await apiClient.get(`/customer/${customerId}/goals/groups`);
+    return response.data;
+  },
+
+  /**
+   * Create goal
+   * POST /customer/{customerId}/goals
+   */
+  createGoal: async (customerId: string, goalData: any) => {
+    console.log('[Goals API] Creating goal:', goalData);
+    const response = await apiClient.post(`/customer/${customerId}/goals`, goalData);
+    console.log('[Goals API] Goal created:', response.data);
+    return response.data;
+  },
+
+  /**
+   * Update goal by ID
+   * PUT /customer/{customerId}/goals/{id}
+   */
+  updateGoalById: async (customerId: string, goalId: string, updateData: any) => {
+    console.log('[Goals API] Updating goal:', goalId, updateData);
+    const response = await apiClient.put(`/customer/${customerId}/goals/${goalId}`, updateData);
+    console.log('[Goals API] Goal updated:', response.data);
+    return response.data;
+  },
+
+  /**
+   * Delete goal by ID
+   * DELETE /customer/{customerId}/goals/{goalId}
+   */
+  deleteGoalById: async (customerId: string, goalId: string) => {
+    console.log('[Goals API] Deleting goal:', goalId);
+    const response = await apiClient.delete(`/customer/${customerId}/goals/${goalId}`);
+    console.log('[Goals API] Goal deleted');
+    return response.data;
+  },
+
+  /**
+   * Setup goal (target amount, date, deposits)
+   * PUT /customer/{customerId}/goals/setup/{goalId}
    */
   setupGoal: async (customerId: string, goalId: string, setupData: any) => {
+    console.log('[Goals API] Setting up goal:', goalId, setupData);
     const response = await apiClient.put(`/customer/${customerId}/goals/setup/${goalId}`, setupData);
+    console.log('[Goals API] Goal setup complete:', response.data);
+    return response.data;
+  },
+
+  /**
+   * Get goal onboarding guidance
+   * GET /customer/{customerId}/goal-onboardings?goalId={goalId}
+   */
+  getGoalOnboarding: async (customerId: string, goalId: string) => {
+    const response = await apiClient.get(`/customer/${customerId}/goal-onboardings`, {
+      params: { goalId },
+    });
+    return response.data;
+  },
+
+  /**
+   * Get goal questionnaires (for risk assessment)
+   * GET /customer/{customerId}/goal-questionnaires
+   */
+  getGoalQuestionnaires: async (customerId: string) => {
+    const response = await apiClient.get(`/customer/${customerId}/goal-questionnaires`);
+    return response.data;
+  },
+
+  /**
+   * Submit questionnaire answers
+   * POST /customer/{customerId}/goal-questionnaires
+   */
+  postGoalQuestionnaires: async (customerId: string, answers: any) => {
+    console.log('[Goals API] Submitting questionnaire answers');
+    const response = await apiClient.post(`/customer/${customerId}/goal-questionnaires`, answers);
+    console.log('[Goals API] Questionnaire submitted:', response.data);
+    return response.data;
+  },
+
+  /**
+   * Update goal journey step
+   * PUT /customer/{customerId}/goals/update-journey-step/{goalId}
+   */
+  updateJourneyStep: async (customerId: string, goalId: string, journeyStep: number) => {
+    console.log('[Goals API] Updating journey step for goal:', goalId, 'to step:', journeyStep);
+    const response = await apiClient.put(`/customer/${customerId}/goals/update-journey-step/${goalId}`, {
+      journeyStep,
+    });
+    console.log('[Goals API] Journey step updated successfully');
+    return response.data;
+  },
+
+  /**
+   * Get risk profile recommendation for goal
+   * GET /customer/{customerId}/goal-risk-profiles/recommendation?goalId={goalId}
+   */
+  getGoalRiskProfileRecommendation: async (customerId: string, goalId?: string) => {
+    const response = await apiClient.get(`/customer/${customerId}/goal-risk-profiles/recommendation`, {
+      params: goalId ? { goalId } : {},
+    });
     return response.data;
   },
 
   /**
    * Get product recommendations for goal
+   * GET /customer/{customerId}/goals/products-recommendation/{goalId}
    */
-  getProductRecommendations: async (customerId: string, goalId: string, investmentStyle: string) => {
+  getProductRecommendations: async (customerId: string, goalId: string, investmentStyle?: string) => {
     const response = await apiClient.get(
       `/customer/${customerId}/goals/products-recommendation/${goalId}`,
-      { params: { investmentStyle } }
+      { params: investmentStyle ? { investmentStyle } : {} }
     );
+    return response.data;
+  },
+
+  /**
+   * Get goal product advice/guidance
+   * GET /customer/{customerId}/goals/product-advice/{goalId}
+   */
+  getGoalProductAdvice: async (customerId: string, goalId: string) => {
+    const response = await apiClient.get(`/customer/${customerId}/goals/product-advice/${goalId}`);
+    return response.data;
+  },
+
+  /**
+   * Get recurring deposit recommendation
+   * POST /customer/{customerId}/goals/recurring-recommendation
+   */
+  goalRecurringRecommendation: async (customerId: string, recommendationData: any) => {
+    const response = await apiClient.post(
+      `/customer/${customerId}/goals/recurring-recommendation`,
+      recommendationData
+    );
+    return response.data;
+  },
+
+  /**
+   * Create goal investment
+   * POST /customer/{customerId}/goal-investments
+   */
+  postGoalInvestments: async (customerId: string, investmentData: any) => {
+    console.log('[Goals API] Creating goal investment:', investmentData);
+    const response = await apiClient.post(`/customer/${customerId}/goal-investments`, investmentData);
+    console.log('[Goals API] Investment created:', response.data);
+    return response.data;
+  },
+
+  /**
+   * Update goal investment
+   * PUT /customer/{customerId}/goal-investments/{goalId}
+   */
+  putGoalInvestments: async (customerId: string, goalId: string, investmentData: any) => {
+    console.log('[Goals API] Updating goal investment:', goalId);
+    const response = await apiClient.put(`/customer/${customerId}/goal-investments/${goalId}`, investmentData);
+    console.log('[Goals API] Investment updated:', response.data);
+    return response.data;
+  },
+
+  /**
+   * Update goal journey step
+   * PUT /customer/{customerId}/goals/update-journey-step/{goalId}
+   */
+  updateJourneyStep: async (customerId: string, goalId: string, journeyStep: number) => {
+    console.log('[Goals API] Updating journey step:', goalId, 'step:', journeyStep);
+    const response = await apiClient.put(
+      `/customer/${customerId}/goals/update-journey-step/${goalId}`,
+      { journeyStep }
+    );
+    console.log('[Goals API] Journey step updated');
+    return response.data;
+  },
+
+  /**
+   * Mark goal reached popup as shown
+   * PUT /customer/{customerId}/goals/mark-reached-popup/{goalId}
+   */
+  markReachedPopup: async (customerId: string, goalId: string) => {
+    const response = await apiClient.put(`/customer/${customerId}/goals/mark-reached-popup/${goalId}`);
     return response.data;
   },
 };

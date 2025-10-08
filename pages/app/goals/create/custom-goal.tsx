@@ -9,8 +9,8 @@ import { goalsApi } from '../../../../services/api';
 interface GoalIcon {
   id: string;
   name: string;
-  icon: string;
-  iconUrl?: string;
+  iconUrl: string;  // SVG URL from backend (matching mobile app VaultGoalIcon)
+  icon?: string;  // Emoji (fallback only)
 }
 
 export default function CustomYourGoal() {
@@ -23,30 +23,51 @@ export default function CustomYourGoal() {
   const [showIconPicker, setShowIconPicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [goalIcons, setGoalIcons] = useState<GoalIcon[]>([]);
 
-  // Goal icons (would come from API in production)
-  const goalIcons: GoalIcon[] = [
-    { id: '1', name: 'Target', icon: '🎯' },
-    { id: '2', name: 'Money Bag', icon: '💰' },
-    { id: '3', name: 'House', icon: '🏡' },
-    { id: '4', name: 'Car', icon: '🚗' },
-    { id: '5', name: 'Plane', icon: '✈️' },
-    { id: '6', name: 'Graduation', icon: '🎓' },
-    { id: '7', name: 'Ring', icon: '💍' },
-    { id: '8', name: 'Palm Tree', icon: '🌴' },
-    { id: '9', name: 'Shield', icon: '🛡️' },
-    { id: '10', name: 'Chart', icon: '📈' },
-    { id: '11', name: 'Rocket', icon: '🚀' },
-    { id: '12', name: 'Star', icon: '⭐' },
+  // Fallback emoji icons (used if backend doesn't provide icons)
+  const fallbackIcons: GoalIcon[] = [
+    { id: '1', name: 'Target', icon: '🎯', iconUrl: '' },
+    { id: '2', name: 'Money Bag', icon: '💰', iconUrl: '' },
+    { id: '3', name: 'House', icon: '🏡', iconUrl: '' },
+    { id: '4', name: 'Car', icon: '🚗', iconUrl: '' },
+    { id: '5', name: 'Plane', icon: '✈️', iconUrl: '' },
+    { id: '6', name: 'Graduation', icon: '🎓', iconUrl: '' },
+    { id: '7', name: 'Ring', icon: '💍', iconUrl: '' },
+    { id: '8', name: 'Palm Tree', icon: '🌴', iconUrl: '' },
+    { id: '9', name: 'Shield', icon: '🛡️', iconUrl: '' },
+    { id: '10', name: 'Chart', icon: '📈', iconUrl: '' },
+    { id: '11', name: 'Rocket', icon: '🚀', iconUrl: '' },
+    { id: '12', name: 'Star', icon: '⭐', iconUrl: '' },
   ];
+
+  // Load goal icons from aggregate data (matching mobile app)
+  useEffect(() => {
+    if (aggregate?.goalIcons && aggregate.goalIcons.length > 0) {
+      console.log('📋 [Goal Icons] Loading icons from backend:', aggregate.goalIcons);
+      // Convert backend icon URLs to GoalIcon format
+      const backendIcons: GoalIcon[] = aggregate.goalIcons.map((iconUrl, index) => ({
+        id: `backend-${index}`,
+        name: `Icon ${index + 1}`,
+        iconUrl: iconUrl,
+      }));
+      setGoalIcons(backendIcons);
+      console.log('✅ [Goal Icons] Loaded', backendIcons.length, 'icons from backend');
+    } else {
+      console.log('⚠️ [Goal Icons] No icons from backend, using fallback emojis');
+      setGoalIcons(fallbackIcons);
+    }
+  }, [aggregate]);
 
   useEffect(() => {
     if (goalTypeName) {
       setGoalName(`My ${goalTypeName} Goal`);
     }
-    // Set default icon
-    setSelectedIcon(goalIcons[0]);
-  }, [goalTypeName]);
+    // Set default icon when icons are loaded
+    if (goalIcons.length > 0 && !selectedIcon) {
+      setSelectedIcon(goalIcons[0]);
+    }
+  }, [goalTypeName, goalIcons]);
 
   const handleSelectIcon = (icon: GoalIcon) => {
     setSelectedIcon(icon);
@@ -75,22 +96,27 @@ export default function CustomYourGoal() {
     setError('');
 
     try {
-      // Create goal with name and icon (matching webapp implementation)
+      // Create goal with name and icon (matching mobile app exactly)
       const createGoalData: any = {
         name: goalName.trim(),
-        iconUrl: selectedIcon.icon || selectedIcon.iconUrl || '', // Use emoji icon
+        iconUrl: selectedIcon.iconUrl || selectedIcon.icon || '', // Use SVG URL from backend, fallback to emoji
+        isShariahCompliant: false, // CRITICAL: Backend requires this field
       };
 
       // Only include wealthAccountInvestmentId if we have a product (not for regular goals)
-      // Don't send null or false values - API rejects them
+      // Don't send null or false values for optional fields
 
-      console.log('🎯 Creating goal with data:', createGoalData);
+      console.log('🎯 [Goal Create] Sending request:', createGoalData);
       const response = await goalsApi.createGoal(customerInfo.id, createGoalData);
-      console.log('✅ Goal created successfully:', response);
+      console.log('✅ [Goal Create] Response received:', response);
 
-      if (!response.id) {
-        throw new Error('Failed to get goal ID from response');
+      // Backend returns the goal ID - verify we got it
+      if (!response || !response.id) {
+        console.error('❌ [Goal Create] Invalid response - missing goal ID:', response);
+        throw new Error('Backend did not return a valid goal ID');
       }
+
+      console.log('✅ [Goal Create] Goal ID:', response.id);
 
       // Navigate to questionnaires with the goal ID
       router.push({
@@ -198,7 +224,25 @@ export default function CustomYourGoal() {
                 <div className="flex items-center">
                   {selectedIcon && (
                     <>
-                      <span className="text-3xl mr-3">{selectedIcon.icon}</span>
+                      {selectedIcon.iconUrl ? (
+                        // SVG icon from backend
+                        <img
+                          src={selectedIcon.iconUrl}
+                          alt={selectedIcon.name}
+                          className="w-10 h-10 mr-3"
+                          onError={(e) => {
+                            // Fallback to emoji if SVG fails to load
+                            e.currentTarget.style.display = 'none';
+                            const emojiSpan = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (emojiSpan) emojiSpan.style.display = 'inline';
+                          }}
+                        />
+                      ) : null}
+                      {selectedIcon.icon && (
+                        <span className="text-3xl mr-3" style={{ display: selectedIcon.iconUrl ? 'none' : 'inline' }}>
+                          {selectedIcon.icon}
+                        </span>
+                      )}
                       <span className="text-vault-black dark:text-white">{selectedIcon.name}</span>
                     </>
                   )}
@@ -210,22 +254,45 @@ export default function CustomYourGoal() {
 
               {/* Icon Picker */}
               {showIconPicker && (
-                <div className="mt-4 grid grid-cols-4 gap-3 p-4 bg-vault-gray-50 dark:bg-vault-gray-700 rounded-xl">
+                <div className="mt-4 grid grid-cols-4 gap-3 p-4 bg-vault-gray-50 dark:bg-vault-gray-700 rounded-xl max-h-96 overflow-y-auto">
                   {goalIcons.map((icon) => (
                     <button
                       key={icon.id}
                       type="button"
                       onClick={() => handleSelectIcon(icon)}
                       className={`
-                        p-4 rounded-xl transition-all text-center
+                        p-4 rounded-xl transition-all text-center flex flex-col items-center justify-center min-h-[80px]
                         ${selectedIcon?.id === icon.id
                           ? 'bg-vault-green/20 border-2 border-vault-green'
                           : 'bg-white dark:bg-vault-gray-800 border-2 border-transparent hover:border-vault-green/50'
                         }
                       `}
                     >
-                      <span className="text-3xl block mb-1">{icon.icon}</span>
-                      <span className="text-xs text-vault-gray-600 dark:text-vault-gray-400">{icon.name}</span>
+                      {icon.iconUrl ? (
+                        // SVG icon from backend (matching mobile app)
+                        <img
+                          src={icon.iconUrl}
+                          alt={icon.name}
+                          className="w-10 h-10 mb-1 object-contain"
+                          onError={(e) => {
+                            // Fallback to emoji if SVG fails to load
+                            e.currentTarget.style.display = 'none';
+                            const emojiSpan = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (emojiSpan) emojiSpan.style.display = 'block';
+                          }}
+                        />
+                      ) : null}
+                      {icon.icon && (
+                        <span
+                          className="text-3xl block mb-1"
+                          style={{ display: icon.iconUrl ? 'none' : 'block' }}
+                        >
+                          {icon.icon}
+                        </span>
+                      )}
+                      <span className="text-xs text-vault-gray-600 dark:text-vault-gray-400 line-clamp-1">
+                        {icon.name}
+                      </span>
                     </button>
                   ))}
                 </div>

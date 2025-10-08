@@ -71,16 +71,20 @@ export default function GoalRecommendations() {
     setSubmitting(true);
 
     try {
-      // Setup goal with selected product
-      await goalsApi.setupGoal(customerInfo.id, goalId as string, {
+      console.log('💰 [Product Selection] Submitting goal investment with product:', selectedProduct.id);
+
+      // Post goal investment (links product to goal)
+      // CRITICAL: Match mobile app exactly - only send goalId and productId
+      await goalsApi.postGoalInvestments(customerInfo.id, {
+        goalId: goalId as string,
         productId: selectedProduct.id,
-        initialDepositAmount: parseFloat(initialDeposit as string),
-        recurringDepositAmount: parseFloat(recurringDeposit as string) || 0,
       });
 
-      // Navigate to onboarding
+      console.log('✅ [Product Selection] Goal investment created successfully');
+
+      // Navigate to success/onboarding page
       router.push({
-        pathname: '/app/goals/create/onboarding',
+        pathname: '/app/goals/create/success',
         query: {
           goalId,
           goalName,
@@ -89,8 +93,9 @@ export default function GoalRecommendations() {
         }
       });
     } catch (err: any) {
-      console.error('Failed to setup goal:', err);
-      alert(err.response?.data?.message || 'Failed to setup goal. Please try again.');
+      console.error('❌ [Product Selection] Failed to create goal investment:', err);
+      console.error('Error details:', err.response?.data);
+      alert(err.response?.data?.message || err.response?.data?.error || 'Failed to setup goal investment. Please try again.');
       setSubmitting(false);
     }
   };
@@ -136,10 +141,10 @@ export default function GoalRecommendations() {
             </button>
 
             <h1 className="text-3xl font-bold font-display text-vault-black dark:text-white mb-2">
-              Recommended Investment Products
+              Goal & Style Recommendations
             </h1>
             <p className="text-vault-gray-600 dark:text-vault-gray-400">
-              Based on your {riskProfile} risk profile
+              Curated investment products for your {riskProfile} risk profile
             </p>
 
             {/* Progress Indicator */}
@@ -191,67 +196,97 @@ export default function GoalRecommendations() {
               </div>
             ) : (
               filteredProducts.map((product) => (
-                <button
+                <div
                   key={product.id}
                   onClick={() => handleSelectProduct(product)}
                   className={`
-                    w-full text-left p-6 rounded-2xl border-2 transition-all
+                    w-full text-left rounded-2xl border-2 transition-all cursor-pointer overflow-hidden
                     ${selectedProduct?.id === product.id
-                      ? 'border-vault-green bg-vault-green/5'
+                      ? 'border-vault-green bg-vault-green/5 ring-2 ring-vault-green ring-offset-2'
                       : 'border-vault-gray-200 dark:border-vault-gray-700 bg-white dark:bg-vault-gray-800 hover:border-vault-green/50'
                     }
                   `}
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-xl font-bold text-vault-black dark:text-white">
-                          {product.name}
-                        </h3>
-                        {product.isShariahCompliant && (
-                          <span className="px-2 py-1 bg-vault-green/20 text-vault-green text-xs font-semibold rounded">
-                            Shariah
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400 mb-3">
-                        {product.description}
-                      </p>
+                  {/* Shariah Banner */}
+                  {product.isShariahCompliant && (
+                    <div className="bg-vault-green/10 dark:bg-vault-green/20 px-4 py-2 text-center">
+                      <p className="text-xs font-semibold text-vault-green">✓ Shariah Compliant Portfolio</p>
                     </div>
-                    {selectedProduct?.id === product.id && (
-                      <svg className="w-8 h-8 text-vault-green ml-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </div>
+                  )}
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div>
-                      <p className="text-xs text-vault-gray-500 mb-1">Risk Level</p>
-                      <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${getRiskColor(product.riskLevel)}`}>
-                        {product.riskLevel}
-                      </span>
+                  {/* Main Content */}
+                  <div className="p-6">
+                    <div className="flex items-start gap-4 mb-4">
+                      {/* Product Icon/Image */}
+                      {product.iconUrl && (
+                        <div className="flex-shrink-0">
+                          <img
+                            src={product.iconUrl}
+                            alt={product.name}
+                            className="w-16 h-16 object-contain rounded-lg"
+                            onError={(e) => {
+                              // Fallback to initials if image fails to load
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      {/* Product Info */}
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <h3 className="text-xl font-bold text-vault-black dark:text-white">
+                            {product.name}
+                          </h3>
+                          {selectedProduct?.id === product.id && (
+                            <svg className="w-6 h-6 text-vault-green flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                        <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400 mb-3 line-clamp-2">
+                          {product.description}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-vault-gray-500 mb-1">Expected Return</p>
-                      <p className="text-sm font-bold text-vault-black dark:text-white">
-                        {product.expectedReturn || 'Variable'}
-                      </p>
+
+                    {/* Product Details */}
+                    <div className="grid grid-cols-2 gap-4 p-4 bg-vault-gray-50 dark:bg-vault-gray-700/50 rounded-xl">
+                      <div>
+                        <p className="text-xs text-vault-gray-500 dark:text-vault-gray-400 mb-1">Risk Level</p>
+                        <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${getRiskColor(product.riskLevel)}`}>
+                          {product.riskLevel || 'Medium'}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-xs text-vault-gray-500 dark:text-vault-gray-400 mb-1">Expected Return</p>
+                        <p className="text-sm font-bold text-vault-black dark:text-white">
+                          {product.expectedReturn || 'Variable'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-vault-gray-500 dark:text-vault-gray-400 mb-1">Minimum Investment</p>
+                        <p className="text-sm font-bold text-vault-black dark:text-white">
+                          {formatMoney(product.minimumInvestment || 0, selectedCurrency)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-vault-gray-500 dark:text-vault-gray-400 mb-1">Management Fee</p>
+                        <p className="text-sm font-bold text-vault-black dark:text-white">
+                          {product.fees?.[0]?.percentage ? `${product.fees[0].percentage}%` : 'N/A'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-vault-gray-500 mb-1">Minimum</p>
-                      <p className="text-sm font-bold text-vault-black dark:text-white">
-                        {formatMoney(product.minimumInvestment, selectedCurrency)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-vault-gray-500 mb-1">Fees</p>
-                      <p className="text-sm font-bold text-vault-black dark:text-white">
-                        {product.fees?.[0]?.percentage ? `${product.fees[0].percentage}%` : 'View Details'}
-                      </p>
+
+                    {/* Find Out More Link */}
+                    <div className="mt-4 flex items-center text-vault-green hover:text-vault-green-dark text-sm font-semibold">
+                      <span>View Portfolio Details</span>
+                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
                     </div>
                   </div>
-                </button>
+                </div>
               ))
             )}
           </div>

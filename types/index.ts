@@ -161,6 +161,27 @@ export interface TrackedCategory {
   id?: string;                // Budget ID (null for new budget)
 }
 
+// Goal Category Enum
+export enum GoalCategory {
+  General = 1,
+  Financial = 2,
+  Lifestyle = 3,
+  Pilgrimage = 4,
+}
+
+// Goal Journey Steps
+export enum GoalJourneyStep {
+  GoalCreation = 1,
+  InvestmentStyle = 2,
+  GoalCalculator = 3,
+  ProductSelection = 4,
+  Completed = 5,
+  ProductAdvice = 6,
+}
+
+// Goal Status Constants
+export type GoalStatus = 'None' | 'Continue' | 'Pending' | 'Reached';
+
 export interface Goal {
   id: string;
   goalId: string;
@@ -177,12 +198,111 @@ export interface Goal {
   portfolioId?: string;
   initialDeposit?: number;
   recurringDeposit?: number;
-  status: 'None' | 'Continue' | 'Pending' | 'Reached';
+  status: GoalStatus;
   journeyStep: number;
   isNoGoal: boolean;
   isShariahCompliant: boolean;
   createdDate?: string;
   reachedDate?: string;
+}
+
+// Goal Type (for selection)
+export interface GoalType {
+  goalId: string;
+  name: string;
+  iconUrl?: string;
+  displayOrder?: number;
+  category: GoalCategory;
+}
+
+// Goal Icon
+export interface GoalIcon {
+  iconId: string;
+  iconUrl: string;
+}
+
+// Goal Groups Response (for categorized display)
+export interface GoalGroup {
+  category: GoalCategory;
+  categoryName: string;
+  goals: Goal[];
+}
+
+// API Request/Response Types
+export interface CreateGoalRequest {
+  name: string;
+  goalTypeId: string;
+  iconUrl?: string;
+  isShariahCompliant: boolean;
+}
+
+export interface CreateGoalResponse {
+  goalId: string;
+  name: string;
+  status: string;
+}
+
+export interface GoalSetupRequest {
+  targetAmount: number;
+  targetDate: string;  // ISO 8601 format
+  initialDeposit?: number;
+  recurringDeposit?: number;
+}
+
+export interface GoalSetupResponse {
+  goalId: string;
+  targetAmount: number;
+  targetDate: string;
+  projectedCompletionDate?: string;
+}
+
+export interface UpdateGoalRequest {
+  name?: string;
+  targetAmount?: number;
+  targetDate?: string;
+  initialDeposit?: number;
+  recurringDeposit?: number;
+  status?: GoalStatus;
+}
+
+export interface GoalQuestionnaire {
+  questionId: string;
+  questionText: string;
+  questionType: string;
+  options: QuestionOption[];
+  required: boolean;
+}
+
+export interface QuestionOption {
+  optionId: string;
+  optionText: string;
+  score?: number;
+}
+
+export interface AnsweredQuestionRequest {
+  questionId: string;
+  answerId: string;
+}
+
+export interface GoalRecurringRecommendationRequest {
+  goalId: string;
+  targetAmount: number;
+  targetDate: string;
+  initialDeposit?: number;
+}
+
+export interface GoalRecurringRecommendationResponse {
+  recommendedMonthlyDeposit: number;
+  projectedFinalAmount: number;
+  likelihood: string;  // e.g., "High", "Medium", "Low"
+}
+
+export interface GoalInvestmentRequest {
+  goalId: string;
+  productId: string;
+  portfolioId?: string;
+  initialDeposit: number;
+  recurringDeposit?: number;
 }
 
 export interface Tag {
@@ -314,6 +434,7 @@ export interface Aggregate {
   financialHealthScores: FinancialHealthScore[];
   products: Product[];
   goals: Goal[];
+  goalIcons?: string[];  // Array of SVG icon URLs from backend (matching mobile app)
   serviceProviders: ServiceProvider[];
   profile?: Profile;
   supportedCurrencies?: Currency[];

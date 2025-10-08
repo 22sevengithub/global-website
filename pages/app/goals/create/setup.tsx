@@ -22,6 +22,8 @@ export default function GoalSetup() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [goalName, setGoalName] = useState('');
+  const [checkingGoalState, setCheckingGoalState] = useState(true);
+  const [goalAlreadyConfigured, setGoalAlreadyConfigured] = useState(false);
 
   // Minimums (would come from API in production)
   const minimums = {
@@ -36,6 +38,84 @@ export default function GoalSetup() {
     minDate.setMonth(minDate.getMonth() + 7);
     return minDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
   };
+
+  // Check goal state on page load
+  useEffect(() => {
+    const checkGoalState = async () => {
+      if (!customerInfo?.id || !goalId || contextLoading) {
+        setCheckingGoalState(true);
+        return;
+      }
+
+      try {
+        console.log('🔍 [Goal Setup - Page Load] Checking goal state for goalId:', goalId);
+        const currentGoal = await goalsApi.getGoalById(customerInfo.id, goalId as string);
+        console.log('📊 [Goal Setup - Page Load] Current journey step:', currentGoal.journeyStep);
+
+        // Check if goal is already configured (journey step 4 or higher)
+        if (currentGoal.journeyStep && currentGoal.journeyStep >= 4) {
+          console.log('⚠️ [Goal Setup - Page Load] Goal already configured at journey step', currentGoal.journeyStep);
+          console.log('⚠️ [Goal Setup - Page Load] Showing warning to user');
+          setGoalAlreadyConfigured(true);
+
+          // Auto-redirect after showing warning
+          setTimeout(() => {
+            const shouldContinue = window.confirm(
+              `⚠️ IMPORTANT: This goal is already configured!\n\n` +
+              `Goal ID: ${goalId}\n` +
+              `Journey Step: ${currentGoal.journeyStep}\n\n` +
+              `You CANNOT call setup again on this goal - it will fail with a 500 error.\n\n` +
+              `To test the complete goal creation flow:\n` +
+              `1. Click "Cancel" to start over\n` +
+              `2. Navigate to "Select Goal Type"\n` +
+              `3. Create a completely NEW goal\n\n` +
+              `Click "OK" to skip to product recommendations with this existing goal.`
+            );
+
+            if (shouldContinue) {
+              router.push({
+                pathname: '/app/goals/create/recommendations',
+                query: {
+                  goalId: goalId,
+                  goalName: currentGoal.name || queryGoalName,
+                  riskProfile,
+                  initialDeposit: currentGoal.initialDeposit?.toString() || '0',
+                  recurringDeposit: currentGoal.recurringDeposit?.toString() || '0',
+                }
+              });
+            } else {
+              router.push('/app/goals/create/select-type');
+            }
+          }, 500);
+        } else if (currentGoal.journeyStep && currentGoal.journeyStep !== 3 && currentGoal.journeyStep < 4) {
+          // Goal is not at the correct step for setup
+          // Journey step should be 3 (goalCalculator) to call setupGoal
+          console.log('⚠️ [Goal Setup - Page Load] Goal is at journey step', currentGoal.journeyStep, 'but should be at step 3');
+          console.log('⚠️ [Goal Setup - Page Load] Redirecting to questionnaires');
+          router.push({
+            pathname: '/app/goals/create/questionnaires',
+            query: {
+              goalId,
+              goalName: currentGoal.name || queryGoalName,
+              goalTypeId,
+              goalTypeName,
+            }
+          });
+        } else {
+          console.log('✅ [Goal Setup - Page Load] Goal is at journey step', currentGoal.journeyStep, '- ready for setup');
+          setGoalAlreadyConfigured(false);
+        }
+      } catch (err) {
+        console.error('❌ [Goal Setup - Page Load] Failed to check goal state:', err);
+      } finally {
+        setCheckingGoalState(false);
+      }
+    };
+
+    if (customerInfo?.id && goalId && !contextLoading) {
+      checkGoalState();
+    }
+  }, [customerInfo, goalId, contextLoading, router, riskProfile, queryGoalName]);
 
   useEffect(() => {
     // Only set goal name if it hasn't been set yet
@@ -143,20 +223,117 @@ export default function GoalSetup() {
     setErrors({});
 
     try {
-      // Setup goal with amounts and dates (goal already created in custom-goal step)
-      // Format date as ISO 8601 with UTC timezone (matching mobile app)
+      // CRITICAL VALIDATION: Ensure we have a valid goalId from previous step
+      if (!goalId) {
+        console.error('❌ [Goal Setup] Missing goalId - cannot proceed');
+        setErrors({ submit: 'Goal ID is missing. Please restart the goal creation process.' });
+        setLoading(false);
+        return;
+      }
+
+      console.log('📋 [Goal Setup] Starting setup for goalId:', goalId);
+
+      // STEP 1: Fetch current goal state to understand what we're working with
+      console.log('🔍 [Goal Setup] Fetching current goal state...');
+      const currentGoal = await goalsApi.getGoalById(customerInfo.id, goalId as string);
+      console.log('📊 [Goal Setup] Current goal state:', JSON.stringify(currentGoal, null, 2));
+      console.log('📊 [Goal Setup] Current journey step:', currentGoal.journeyStep);
+
+      // CRITICAL: Check if goal is already set up (journey step 4 or higher)
+      if (currentGoal.journeyStep && currentGoal.journeyStep >= 4) {
+        console.log('⚠️ [Goal Setup] Goal already set up at journey step', currentGoal.journeyStep);
+        console.log('⚠️ [Goal Setup] This goal was already configured.');
+        console.log('⚠️ [Goal Setup] NOTE: You are using an existing goal. To test the complete flow, create a NEW goal.');
+
+        // Show user a choice
+        const shouldContinue = window.confirm(
+          `This goal is already configured (journey step ${currentGoal.journeyStep}).\n\n` +
+          `Calling setup again will fail with a 500 error.\n\n` +
+          `Options:\n` +
+          `- Click OK to skip to product recommendations\n` +
+          `- Click Cancel to start over with a new goal`
+        );
+
+        if (shouldContinue) {
+          // Skip to recommendations
+          router.push({
+            pathname: '/app/goals/create/recommendations',
+            query: {
+              goalId: goalId,
+              goalName: currentGoal.name || goalName,
+              riskProfile,
+              initialDeposit: currentGoal.initialDeposit?.toString() || initialDeposit || '0',
+              recurringDeposit: currentGoal.recurringDeposit?.toString() || recurringDeposit || '0',
+            }
+          });
+        } else {
+          // Start over
+          router.push('/app/goals/create/select-type');
+        }
+        return;
+      }
+
+      // Check if goal is at the correct journey step for setup (should be step 3)
+      if (currentGoal.journeyStep && currentGoal.journeyStep !== 3 && currentGoal.journeyStep < 4) {
+        console.log('⚠️ [Goal Setup] Goal is at journey step', currentGoal.journeyStep, 'but should be at step 3');
+        console.log('⚠️ [Goal Setup] Redirecting to questionnaires');
+        setErrors({ submit: 'Please complete the questionnaire first to reach step 3.' });
+        setLoading(false);
+
+        setTimeout(() => {
+          router.push({
+            pathname: '/app/goals/create/questionnaires',
+            query: {
+              goalId,
+              goalName: currentGoal.name || goalName,
+              goalTypeId,
+              goalTypeName,
+            }
+          });
+        }, 1500);
+        return;
+      }
+
+      // STEP 2: Update goal name if it changed
+      if (goalName && goalName !== queryGoalName) {
+        console.log('📝 [Goal Setup] Goal name changed, updating:', goalName);
+        await goalsApi.updateGoalById(customerInfo.id, goalId as string, {
+          name: goalName,
+        });
+        console.log('✅ [Goal Setup] Goal name updated');
+      }
+
+      // STEP 3: Setup goal with amounts and dates
+      // NOTE: The setupGoal API will automatically update the journey step
+      // from step 1 (Goal Creation) to step 4 (Product Selection)
+      // Format date as ISO 8601 with UTC timezone (matching mobile app exactly)
       const [year, month] = targetDate.split('-');
       const targetDateUTC = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, 1));
       const formattedDate = targetDateUTC.toISOString(); // "2025-12-01T00:00:00.000Z"
 
+      // Prepare setup data matching mobile app exactly
+      const targetAmountNum = parseFloat(targetAmount);
+      const initialDepositNum = initialDeposit ? parseFloat(initialDeposit) : 0;
+      const recurringDepositNum = recurringDeposit ? parseFloat(recurringDeposit) : 0;
+
       const setupData = {
-        targetAmount: parseFloat(targetAmount),
+        targetAmount: targetAmountNum,
         targetDate: formattedDate,
-        initialDepositAmount: parseFloat(initialDeposit) || null,
-        recurringDepositAmount: recurringDeposit ? parseFloat(recurringDeposit) : null,
+        // Mobile app sends null if value is 0 or empty
+        initialDepositAmount: initialDepositNum > 0 ? initialDepositNum : null,
+        recurringDepositAmount: recurringDepositNum > 0 ? recurringDepositNum : null,
       };
 
-      await goalsApi.setupGoal(customerInfo.id, goalId as string, setupData);
+      console.log('📤 [Goal Setup] Sending setup data:', JSON.stringify(setupData, null, 2));
+      console.log('📤 [Goal Setup] Target Amount:', targetAmountNum);
+      console.log('📤 [Goal Setup] Initial Deposit:', initialDepositNum > 0 ? initialDepositNum : 'null (0 or empty)');
+      console.log('📤 [Goal Setup] Recurring Deposit:', recurringDepositNum > 0 ? recurringDepositNum : 'null (0 or empty)');
+      console.log('📤 [Goal Setup] Target Date:', formattedDate);
+
+      const response = await goalsApi.setupGoal(customerInfo.id, goalId as string, setupData);
+
+      console.log('✅ [Goal Setup] Setup successful:', response);
+      console.log('✅ [Goal Setup] Journey step:', response?.journeyStep);
 
       // Navigate to product recommendations
       router.push({
@@ -165,13 +342,51 @@ export default function GoalSetup() {
           goalId: goalId,
           goalName: goalName,
           riskProfile,
-          initialDeposit: initialDeposit,
+          initialDeposit: initialDeposit || '0',
           recurringDeposit: recurringDeposit || '0',
         }
       });
     } catch (err: any) {
-      console.error('Failed to setup goal:', err);
-      setErrors({ submit: err.response?.data?.message || 'Failed to setup goal. Please try again.' });
+      console.error('❌ [Goal Setup] Failed:', err);
+      console.error('❌ [Goal Setup] Error Type:', err.name);
+      console.error('❌ [Goal Setup] Error Message:', err.message);
+      console.error('❌ [Goal Setup] HTTP Status:', err.response?.status);
+      console.error('❌ [Goal Setup] HTTP Status Text:', err.response?.statusText);
+      console.error('❌ [Goal Setup] Response Headers:', err.response?.headers);
+      console.error('❌ [Goal Setup] Backend Error Data:', err.response?.data);
+      console.error('❌ [Goal Setup] Full Error Object:', JSON.stringify(err.response?.data, null, 2));
+      console.error('❌ [Goal Setup] Request Config:', {
+        url: err.config?.url,
+        method: err.config?.method,
+        data: err.config?.data,
+      });
+
+      // Extract backend error message
+      const backendError = err.response?.data;
+      let errorMessage = 'Failed to setup goal. Please try again.';
+
+      if (backendError) {
+        console.log('🔍 [Goal Setup] Analyzing backend error structure:', Object.keys(backendError));
+
+        // Try different error message formats
+        errorMessage = backendError.message
+          || backendError.error
+          || backendError.title
+          || backendError.detail
+          || backendError.errors?.[0]?.message
+          || (typeof backendError === 'string' ? backendError : errorMessage);
+      }
+
+      console.error('❌ [Goal Setup] Displaying error:', errorMessage);
+
+      // Show detailed error to user for debugging
+      const detailedError = `${errorMessage}\n\n` +
+        `HTTP Status: ${err.response?.status || 'Unknown'}\n` +
+        `Goal ID: ${goalId}\n` +
+        `Journey Step: Check console for details\n\n` +
+        `Check browser console for full error details.`;
+
+      setErrors({ submit: detailedError });
       setLoading(false);
     }
   };
@@ -180,14 +395,16 @@ export default function GoalSetup() {
     router.back();
   };
 
-  if (contextLoading || !aggregate) {
+  if (contextLoading || !aggregate || checkingGoalState) {
     return (
       <ProtectedRoute>
         <AppShell title="Goal Setup | Vault22">
           <div className="flex items-center justify-center min-h-screen">
             <div className="text-center">
               <LoadingAnimation size={150} />
-              <p className="text-vault-gray-600 dark:text-vault-gray-400 mt-4">Loading...</p>
+              <p className="text-vault-gray-600 dark:text-vault-gray-400 mt-4">
+                {checkingGoalState ? 'Checking goal state...' : 'Loading...'}
+              </p>
             </div>
           </div>
         </AppShell>
@@ -229,6 +446,26 @@ export default function GoalSetup() {
               <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400">Step 4 of 6</p>
             </div>
           </div>
+
+          {/* Warning Banner for Already Configured Goals */}
+          {goalAlreadyConfigured && (
+            <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-500 rounded-xl p-6 mb-6">
+              <div className="flex items-start">
+                <svg className="w-6 h-6 text-red-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                <div>
+                  <h3 className="font-bold text-red-600 dark:text-red-400 mb-2">⚠️ Goal Already Configured</h3>
+                  <p className="text-sm text-red-600 dark:text-red-400 mb-2">
+                    This goal has already been set up. You cannot call setup again - it will fail.
+                  </p>
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    Please create a NEW goal by starting from "Select Goal Type".
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Goal Name */}
@@ -387,7 +624,7 @@ export default function GoalSetup() {
             <div className="sticky bottom-0 bg-white dark:bg-vault-gray-900 py-6 border-t border-vault-gray-200 dark:border-vault-gray-700">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || goalAlreadyConfigured}
                 className="w-full py-4 rounded-xl font-semibold text-lg bg-vault-green text-vault-black dark:text-white hover:bg-vault-green-light transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {loading ? (

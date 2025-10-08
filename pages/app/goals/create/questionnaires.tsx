@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { useApp } from '../../../../contexts/AppContext';
+import { goalsApi } from '../../../../services/api';
 
 interface Question {
   id: string;
@@ -72,7 +73,7 @@ export default function GoalQuestionnaires() {
     setSelectedOption(optionId);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!selectedOption || navigating) return;
 
     // Save answer
@@ -95,17 +96,124 @@ export default function GoalQuestionnaires() {
                          totalScore <= maxScore * 0.6 ? 'moderate' :
                          totalScore <= maxScore * 0.8 ? 'balanced' : 'aggressive';
 
-      // Navigate to goal setup
-      router.push({
-        pathname: '/app/goals/create/setup',
-        query: {
-          goalId,
-          goalName,
-          goalTypeId,
-          goalTypeName,
-          riskProfile,
+      try {
+        if (!customerInfo?.id || !goalId) {
+          throw new Error('Missing customer ID or goal ID');
         }
-      });
+
+        console.log('📋 [Questionnaires] Calculated risk profile:', riskProfile);
+        console.log('📋 [Questionnaires] Submitting questionnaire to backend...');
+
+        // IMPORTANT: The backend requires questionnaire submission to transition
+        // the journey step from 2 -> 3 (or 4/6 depending on the answer).
+        // The mobile app submits ONE answer at a time (iterative flow).
+        // We'll fetch the first question and submit an answer to progress the journey step.
+
+        // Step 1: Fetch backend questionnaires
+        const backendQuestions = await goalsApi.getGoalQuestionnaires(customerInfo.id);
+        console.log('📋 [Questionnaires] Backend questions:', backendQuestions);
+
+        // Step 2: Get the first question (mobile app uses question id == 1)
+        const firstQuestion = backendQuestions.find((q: any) => q.id === 1);
+        if (!firstQuestion || !firstQuestion.answers || firstQuestion.answers.length === 0) {
+          throw new Error('No questions available from backend');
+        }
+
+        console.log('📋 [Questionnaires] First question:', firstQuestion);
+
+        // Step 3: Map our calculated risk profile to an answer
+        // The backend has specific answers, so we'll select based on risk profile
+        // If we can't map it, we'll just use the first answer to progress the flow
+        let selectedAnswer = firstQuestion.answers[0]; // Default to first answer
+
+        // Try to find an answer that matches the risk profile
+        const riskKeywords: Record<string, string[]> = {
+          conservative: ['conservative', 'low', 'minimal'],
+          moderate: ['moderate', 'medium', 'some'],
+          balanced: ['balanced', 'moderate'],
+          aggressive: ['aggressive', 'high', 'maximum'],
+        };
+
+        const keywords = riskKeywords[riskProfile] || [];
+        const matchingAnswer = firstQuestion.answers.find((answer: any) =>
+          keywords.some(keyword =>
+            answer.answer?.toLowerCase().includes(keyword) ||
+            answer.answerDescription?.toLowerCase().includes(keyword)
+          )
+        );
+
+        if (matchingAnswer) {
+          selectedAnswer = matchingAnswer;
+          console.log('📋 [Questionnaires] Matched answer for risk profile:', riskProfile, matchingAnswer);
+        } else {
+          console.log('📋 [Questionnaires] No matching answer found, using default');
+        }
+
+        // Step 4: Submit the answer to backend
+        console.log('📋 [Questionnaires] Submitting answer:', {
+          questionId: firstQuestion.id,
+          answerId: selectedAnswer.id,
+          goalId: goalId,
+        });
+
+        const response = await goalsApi.postGoalQuestionnaires(customerInfo.id, {
+          questionId: firstQuestion.id,
+          answerId: selectedAnswer.id,
+          goalId: goalId,
+        });
+
+        console.log('✅ [Questionnaires] Backend response:', response);
+        console.log('✅ [Questionnaires] Journey step after submission:', response.journeyStep);
+
+        // Step 5: Navigate based on journey step returned by backend
+        // Journey step 3 = goalCalculator (setup)
+        // Journey step 4 = goalProductSelection (recommendations)
+        // Journey step 6 = goalProductAdvice (product advice)
+
+        if (response.journeyStep === 4) {
+          // Go directly to product recommendations
+          console.log('📋 [Questionnaires] Backend returned journey step 4, going to recommendations');
+          router.push({
+            pathname: '/app/goals/create/recommendations',
+            query: {
+              goalId,
+              goalName,
+              riskProfile,
+            }
+          });
+        } else if (response.journeyStep === 6) {
+          // Product advice - for now, redirect to recommendations
+          console.log('📋 [Questionnaires] Backend returned journey step 6 (product advice)');
+          router.push({
+            pathname: '/app/goals/create/recommendations',
+            query: {
+              goalId,
+              goalName,
+              riskProfile,
+            }
+          });
+        } else {
+          // Journey step 3 or other - go to setup
+          console.log('📋 [Questionnaires] Going to setup with journey step:', response.journeyStep);
+          router.push({
+            pathname: '/app/goals/create/setup',
+            query: {
+              goalId,
+              goalName,
+              goalTypeId,
+              goalTypeName,
+              riskProfile,
+            }
+          });
+        }
+      } catch (err: any) {
+        console.error('❌ [Questionnaires] Failed:', err);
+        console.error('❌ [Questionnaires] Error details:', err.response?.data);
+        setNavigating(false);
+
+        const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to submit questionnaire';
+        alert(`Failed to submit questionnaire: ${errorMessage}\n\nCheck console for details.`);
+      }
     } else {
       // Move to next question
       setCurrentQuestionIndex(currentQuestionIndex + 1);
