@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run build before commit
+echo "🔨 Running build before commit..."
+npm run build
+
+# If build fails, prevent commit
+if [ $? -ne 0 ]; then
+  echo "❌ Build failed! Commit aborted."
+  echo "Please fix the build errors before committing."
+  exit 1
+fi
+
+echo "✅ Build passed! Proceeding with commit..."
