@@ -362,6 +362,7 @@ export interface Product {
   riskLevel: string;
   minimumInvestment: number;
   expectedReturn?: string;  // Expected return rate/description
+  iconUrl?: string;  // Product icon/logo URL
   fees: ProductFee[];
 }
 
