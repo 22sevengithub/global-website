@@ -624,6 +624,70 @@ export const goalsApi = {
   },
 
   /**
+   * Get goal by ID
+   * GET /customer/{customerId}/goals/{goalId}
+   */
+  getGoalById: async (customerId: string, goalId: string) => {
+    const response = await apiClient.get(`/customer/${customerId}/goals/${goalId}`);
+    return response.data;
+  },
+
+  /**
+   * Update goal by ID
+   * PUT /customer/{customerId}/goals/{goalId}
+   */
+  updateGoalById: async (customerId: string, goalId: string, updateData: any) => {
+    console.log('[Goals API] Updating goal:', goalId, updateData);
+    const response = await apiClient.put(`/customer/${customerId}/goals/${goalId}`, updateData);
+    console.log('[Goals API] Goal updated:', response.data);
+    return response.data;
+  },
+
+  /**
+   * Get goal questionnaires (for risk assessment)
+   * GET /customer/{customerId}/goal-questionnaires
+   */
+  getGoalQuestionnaires: async (customerId: string) => {
+    const response = await apiClient.get(`/customer/${customerId}/goal-questionnaires`);
+    return response.data;
+  },
+
+  /**
+   * Submit questionnaire answers
+   * POST /customer/{customerId}/goal-questionnaires
+   */
+  postGoalQuestionnaires: async (customerId: string, answers: any) => {
+    console.log('[Goals API] Submitting questionnaire answers');
+    const response = await apiClient.post(`/customer/${customerId}/goal-questionnaires`, answers);
+    console.log('[Goals API] Questionnaire submitted:', response.data);
+    return response.data;
+  },
+
+  /**
+   * Update goal journey step
+   * PUT /customer/{customerId}/goals/update-journey-step/{goalId}
+   */
+  updateJourneyStep: async (customerId: string, goalId: string, journeyStep: number) => {
+    console.log('[Goals API] Updating journey step for goal:', goalId, 'to step:', journeyStep);
+    const response = await apiClient.put(`/customer/${customerId}/goals/update-journey-step/${goalId}`, {
+      journeyStep,
+    });
+    console.log('[Goals API] Journey step updated successfully');
+    return response.data;
+  },
+
+  /**
+   * Get risk profile recommendation for goal
+   * GET /customer/{customerId}/goal-risk-profiles/recommendation?goalId={goalId}
+   */
+  getGoalRiskProfileRecommendation: async (customerId: string, goalId?: string) => {
+    const response = await apiClient.get(`/customer/${customerId}/goal-risk-profiles/recommendation`, {
+      params: goalId ? { goalId } : {},
+    });
+    return response.data;
+  },
+
+  /**
    * Create goal investment
    * POST /customer/{customerId}/goal-investments
    */
