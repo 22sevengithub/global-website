@@ -770,20 +770,6 @@ export const goalsApi = {
   },
 
   /**
-   * Update goal journey step
-   * PUT /customer/{customerId}/goals/update-journey-step/{goalId}
-   */
-  updateJourneyStep: async (customerId: string, goalId: string, journeyStep: number) => {
-    console.log('[Goals API] Updating journey step:', goalId, 'step:', journeyStep);
-    const response = await apiClient.put(
-      `/customer/${customerId}/goals/update-journey-step/${goalId}`,
-      { journeyStep }
-    );
-    console.log('[Goals API] Journey step updated');
-    return response.data;
-  },
-
-  /**
    * Mark goal reached popup as shown
    * PUT /customer/{customerId}/goals/mark-reached-popup/{goalId}
    */
