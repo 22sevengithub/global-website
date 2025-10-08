@@ -434,6 +434,7 @@ export interface Aggregate {
   financialHealthScores: FinancialHealthScore[];
   products: Product[];
   goals: Goal[];
+  goalIcons?: string[];  // Array of SVG icon URLs from backend (matching mobile app)
   serviceProviders: ServiceProvider[];
   profile?: Profile;
   supportedCurrencies?: Currency[];
