@@ -808,10 +808,12 @@ export const exchangeRateApi = {
 export const serviceProviderApi = {
   /**
    * Link account via service provider (open banking)
+   * Uses the same endpoint as providerLogin: POST /customer/{customerId}/accountlogins/create
    */
   linkAccount: async (customerId: string, providerLogin: any) => {
     console.log(`🔗 Linking account for customer: ${customerId}`);
-    const response = await apiClient.post(`/customer/${customerId}/account-logins`, providerLogin);
+    console.log(`   Provider Login Data:`, providerLogin);
+    const response = await apiClient.post(`/customer/${customerId}/accountlogins/create`, providerLogin);
     console.log('✅ Account login created');
     return response.data;
   },
@@ -846,6 +848,110 @@ export const manualAccountApi = {
     console.log(`🗑️ Deleting manual account: ${accountId}`);
     const response = await apiClient.delete(`/customer/${customerId}/manual-accounts/${accountId}`);
     console.log('✅ Manual account deleted');
+    return response.data;
+  },
+};
+
+// Lean SDK / Provider Login API (for open banking integration)
+export const leanApi = {
+  /**
+   * Initialize provider login for Lean SDK
+   * POST /customer/{customerId}/account-logins
+   *
+   * Returns credentials needed to launch Lean SDK:
+   * - app_token: Lean application token
+   * - customer_id: Lean customer identifier
+   * - access_token: Lean access token
+   * - bank_identifier: Bank identifier for Lean
+   * - permissions: Array of permissions (identity, accounts, balance, transactions)
+   * - accountLoginIds: Array of created account login IDs (for cleanup on cancellation)
+   *
+   * IMPORTANT: Backend creates a "dummy" account login entry that must be deleted
+   * if the user cancels or an error occurs during the Lean flow.
+   */
+  providerLogin: async (customerId: string, providerLoginData: {
+    serviceProviderId: string;
+    loginFields?: Array<{
+      label: string;
+      value: string;
+    }>;
+  }) => {
+    try {
+      console.log(`🔗 [leanApi] Initializing provider login for customer: ${customerId}`);
+      console.log(`   Service Provider ID: ${providerLoginData.serviceProviderId}`);
+      console.log(`   Login Fields Count: ${providerLoginData.loginFields?.length || 0}`);
+      console.log(`   Full Payload:`, JSON.stringify(providerLoginData, null, 2));
+      console.log(`   API Endpoint: POST ${API_BASE_URL}/customer/${customerId}/accountlogins/create`);
+
+      const response = await apiClient.post(
+        `/customer/${customerId}/accountlogins/create`,
+        providerLoginData
+      );
+
+      console.log('✅ Provider login initialized');
+      console.log(`   Response ID: ${response.data.id}`);
+      console.log(`   Account Login IDs: ${response.data.accountLoginIds?.join(', ') || 'none'}`);
+      console.log(`   Full Response:`, JSON.stringify(response.data, null, 2));
+
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ [leanApi] Provider login failed');
+      console.error(`   Customer ID: ${customerId}`);
+      console.error(`   Service Provider ID: ${providerLoginData.serviceProviderId}`);
+      console.error(`   Error Status: ${error.response?.status}`);
+      console.error(`   Error Message: ${error.message}`);
+      console.error(`   Error Response:`, error.response?.data);
+      console.error(`   Request URL: ${error.config?.url}`);
+      console.error(`   Request Method: ${error.config?.method}`);
+      console.error(`   Request Base URL: ${error.config?.baseURL}`);
+      console.error(`   Full Request URL: ${error.config?.baseURL}${error.config?.url}`);
+      throw error;
+    }
+  },
+
+  /**
+   * Delete dummy account login (cleanup on cancellation/error)
+   * DELETE /customer/{customerId}/account-logins/{accountLoginId}
+   *
+   * CRITICAL: Called when user cancels Lean flow or an error occurs.
+   * The backend creates a "dummy" account login entry during providerLogin that
+   * needs to be cleaned up if the Lean flow is not completed successfully.
+   *
+   * Error handling:
+   * - 404: Account login not found (may not have been created yet) - ignore
+   * - 400: Bad request (account may be in invalid state) - ignore
+   * - Other errors: Log and continue
+   */
+  deleteDummyAccountLogin: async (customerId: string, accountLoginId: string) => {
+    try {
+      console.log(`🗑️ Deleting dummy account login: ${accountLoginId} for customer: ${customerId}`);
+
+      await apiClient.delete(`/customer/${customerId}/accountlogins/dummy/${accountLoginId}`);
+
+      console.log('✅ Dummy account login deleted successfully');
+    } catch (error: any) {
+      // Handle specific error codes gracefully
+      if (error.response?.status === 404) {
+        console.log('ℹ️ Dummy account login not found (may not have been created yet)');
+      } else if (error.response?.status === 400) {
+        console.log('ℹ️ Bad request when deleting dummy account (account may be in invalid state)');
+      } else {
+        console.warn('⚠️ Failed to delete dummy account login:', error.response?.status, error.response?.data);
+      }
+      // Don't throw - cleanup errors should not block the flow
+    }
+  },
+
+  /**
+   * Refresh account data after successful linking
+   * POST /customer/{customerId}/refresh
+   */
+  refreshAccountLogins: async (customerId: string, accountLoginIds: string[]) => {
+    console.log(`🔄 Refreshing account logins for customer: ${customerId}`);
+    const response = await apiClient.post(`/customer/${customerId}/refresh`, {
+      accountLoginIds,
+    });
+    console.log('✅ Account logins refreshed');
     return response.data;
   },
 };
