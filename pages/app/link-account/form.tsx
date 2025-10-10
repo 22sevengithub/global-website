@@ -8,6 +8,8 @@ import { useRouter } from 'next/router';
 import { useApp } from '../../../contexts/AppContext';
 import { serviceProviderApi } from '../../../services/api';
 import { ServiceProvider } from '../../../types';
+import { useLeanConnect } from '../../../hooks/useLeanConnect';
+import { ServiceProvider as LeanServiceProvider } from '../../../types/lean';
 
 export default function LinkAccountForm() {
   const router = useRouter();
@@ -21,9 +23,97 @@ export default function LinkAccountForm() {
 
   // Get provider from aggregate data
   const provider = useMemo(() => {
-    if (!aggregate?.serviceProviders || !providerId) return null;
-    return aggregate.serviceProviders.find(p => p.ttsId === providerId) || null;
+    console.log('[FormPage] Looking for provider:', {
+      providerId,
+      providerIdType: typeof providerId,
+      hasAggregate: !!aggregate,
+      providerCount: aggregate?.serviceProviders?.length || 0
+    });
+
+    if (!aggregate?.serviceProviders) {
+      console.log('[FormPage] No service providers in aggregate');
+      return null;
+    }
+
+    if (!providerId) {
+      console.log('[FormPage] No providerId in query');
+      return null;
+    }
+
+    // Match by id or ttsId (backend uses 'id', not 'ttsId')
+    const found = aggregate.serviceProviders.find(p =>
+      p.id === providerId || p.ttsId === providerId
+    );
+
+    if (!found) {
+      console.log('[FormPage] Provider not found!');
+      console.log('[FormPage] Available provider IDs:', aggregate.serviceProviders.map(p => p.ttsId).slice(0, 10));
+    } else {
+      console.log('[FormPage] Provider found:', {
+        name: found.name,
+        id: found.id,
+        ttsId: found.ttsId,
+        hasForm: !!found.accountLoginForm,
+        fields: found.accountLoginForm?.accountLoginFields?.length || 0,
+        integrationProvider: found.integrationProvider,
+        authType: found.authType
+      });
+    }
+
+    return found || null;
   }, [aggregate, providerId]);
+
+  // Check if this is a Lean provider (no login form = use Lean SDK)
+  const isLeanProvider = useMemo(() => {
+    if (!provider) return false;
+    // If provider has no accountLoginForm or empty fields, it's a Lean provider
+    return !provider.accountLoginForm?.accountLoginFields ||
+           provider.accountLoginForm.accountLoginFields.length === 0;
+  }, [provider]);
+
+  // Initialize Lean SDK connection for Lean providers
+  const {
+    connectBankAccount,
+    isLoading: isLeanLoading,
+    error: leanError,
+  } = useLeanConnect(customerInfo?.id || null, {
+    onSuccess: () => {
+      console.log('✅ Bank linked successfully via Lean SDK');
+      // Navigate to accounts page
+      router.push('/app/accounts');
+    },
+    onCancel: () => {
+      console.log('❌ User cancelled Lean SDK');
+      // Navigate back to provider list
+      router.push('/app/link-account');
+    },
+    onError: (error) => {
+      console.error('⚠️ Lean SDK error:', error);
+      setError(typeof error === 'string' ? error : 'Failed to link account. Please try again.');
+    },
+    isDarkMode: false, // TODO: Get from theme context
+  });
+
+  // Handler to manually launch Lean SDK
+  const handleLaunchLean = () => {
+    if (!provider || !customerInfo?.id) {
+      setError('Missing required information');
+      return;
+    }
+
+    console.log('🔗 Manually launching Lean SDK for provider:', provider.name);
+
+    // Convert to Lean provider format (use id or ttsId)
+    const leanProvider: LeanServiceProvider = {
+      ttsId: provider.id || provider.ttsId,  // Use id as primary identifier
+      name: provider.name,
+      logoUrl: provider.logoUrl || provider.logo,
+      providerType: 'LEAN',
+    };
+
+    // Launch Lean SDK
+    connectBankAccount(leanProvider);
+  };
 
   useEffect(() => {
     if (provider) {
@@ -73,7 +163,7 @@ export default function LinkAccountForm() {
     try {
       // Prepare provider login data
       const providerLogin = {
-        serviceProviderId: provider.ttsId,
+        serviceProviderId: provider.id || provider.ttsId,  // Use id as primary identifier
         username: formData[Object.keys(formData)[0]], // First field is typically username
         credentials: formData
       };
@@ -84,7 +174,7 @@ export default function LinkAccountForm() {
       // Navigate to linking/progress screen
       router.push({
         pathname: '/app/link-account/linking',
-        query: { providerId: provider.ttsId, providerName: provider.name }
+        query: { providerId: provider.id || provider.ttsId, providerName: provider.name }
       });
     } catch (err: any) {
       console.error('Failed to link account:', err);
@@ -116,7 +206,7 @@ export default function LinkAccountForm() {
             <div className="text-6xl mb-4">⚠️</div>
             <h2 className="text-2xl font-bold text-vault-black dark:text-white mb-4">Provider Not Found</h2>
             <p className="text-vault-gray-600 dark:text-vault-gray-400 mb-6">
-              We couldn't find the provider you're looking for.
+              We couldn't find the provider you're looking for. Please select a provider from the list.
             </p>
             <Link
               href="/app/link-account"
@@ -124,6 +214,163 @@ export default function LinkAccountForm() {
             >
               Back to Provider List
             </Link>
+          </div>
+        </AppShell>
+      </ProtectedRoute>
+    );
+  }
+
+  // Show Lean provider page with manual connect button
+  if (isLeanProvider && !isLeanLoading && !leanError && !error) {
+    return (
+      <ProtectedRoute>
+        <AppShell title={`Link ${provider.name} | Vault22`}>
+          <div className="max-w-2xl mx-auto">
+            {/* Header */}
+            <div className="mb-8">
+              <Link href="/app/link-account" className="inline-flex items-center text-vault-green hover:text-vault-green-dark mb-4">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Providers
+              </Link>
+
+              {/* Provider Header */}
+              <div className="flex items-center mb-6">
+                <div className="w-20 h-20 bg-vault-gray-100 dark:bg-vault-gray-700 rounded-2xl flex items-center justify-center mr-4 p-2">
+                  {provider.logoUrl || provider.logo ? (
+                    <img
+                      src={provider.logoUrl || provider.logo || `https://spi.22seven.com/${provider.id || provider.ttsId}.png`}
+                      alt={provider.name}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <span className="text-4xl">🏦</span>
+                  )}
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold font-display text-vault-black dark:text-white">
+                    {provider.name}
+                  </h1>
+                  <p className="text-vault-gray-600 dark:text-vault-gray-400">
+                    Connect securely via Lean Technologies
+                  </p>
+                </div>
+              </div>
+
+              {/* Security Badge */}
+              <div className="bg-vault-green/10 border border-vault-green/30 rounded-xl p-4 flex items-start mb-6">
+                <Icon name="ic_security" size={24} className="text-vault-green mr-3 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="font-bold text-vault-black dark:text-white mb-1">Your data is secure</h3>
+                  <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400">
+                    We use Lean Technologies' secure platform to connect to your bank. Your credentials are encrypted and never stored on our servers.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Connect Card */}
+            <div className="bg-white dark:bg-vault-gray-800 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700 p-8 text-center">
+              <div className="mb-6">
+                <div className="w-16 h-16 bg-vault-green/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-vault-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-vault-black dark:text-white mb-2">
+                  Ready to Connect
+                </h2>
+                <p className="text-vault-gray-600 dark:text-vault-gray-400">
+                  Click the button below to securely connect your {provider.name} account
+                </p>
+              </div>
+
+              <button
+                onClick={handleLaunchLean}
+                className="w-full px-6 py-4 bg-vault-green text-vault-black dark:text-white rounded-xl font-bold text-lg hover:bg-vault-green-light transition-all shadow-lg hover:shadow-xl"
+              >
+                Connect with {provider.name}
+              </button>
+
+              <div className="mt-6 text-center">
+                <p className="text-xs text-vault-gray-500">
+                  A secure popup window will open to complete the connection
+                </p>
+              </div>
+            </div>
+          </div>
+        </AppShell>
+      </ProtectedRoute>
+    );
+  }
+
+  // Show Lean loading state
+  if (isLeanProvider && (isLeanLoading || submitting)) {
+    return (
+      <ProtectedRoute>
+        <AppShell title={`Connecting ${provider.name} | Vault22`}>
+          <div className="flex flex-col items-center justify-center min-h-[60vh]">
+            <div className="text-center max-w-md">
+              <LoadingAnimation size={150} />
+              <h2 className="text-2xl font-bold text-vault-black dark:text-white mt-6 mb-2">
+                Connecting to {provider.name}
+              </h2>
+              <p className="text-vault-gray-600 dark:text-vault-gray-400 mb-4">
+                Please complete the authentication in the popup window
+              </p>
+              <div className="bg-vault-blue/10 border border-vault-blue/30 rounded-xl p-4 text-sm text-left">
+                <p className="text-vault-gray-700 dark:text-vault-gray-300">
+                  <strong>💡 Tip:</strong> Look for a popup window from Lean Technologies.
+                  If you don't see it, check if your browser blocked popups.
+                </p>
+              </div>
+            </div>
+          </div>
+        </AppShell>
+      </ProtectedRoute>
+    );
+  }
+
+  // Show Lean error state
+  if (isLeanProvider && (leanError || error)) {
+    return (
+      <ProtectedRoute>
+        <AppShell title={`Error Linking ${provider.name} | Vault22`}>
+          <div className="max-w-2xl mx-auto text-center py-12">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h2 className="text-2xl font-bold text-vault-black dark:text-white mb-4">
+              Connection Failed
+            </h2>
+            <p className="text-vault-gray-600 dark:text-vault-gray-400 mb-6">
+              {leanError || error}
+            </p>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => {
+                  setError('');
+                  const leanProvider: LeanServiceProvider = {
+                    ttsId: provider.id || provider.ttsId,  // Use id as primary identifier
+                    name: provider.name,
+                    logoUrl: provider.logoUrl || provider.logo,
+                    providerType: 'LEAN',
+                  };
+                  connectBankAccount(leanProvider);
+                }}
+                className="px-6 py-3 bg-vault-green text-vault-black dark:text-white rounded-xl font-semibold hover:bg-vault-green-light transition-all"
+              >
+                Try Again
+              </button>
+              <Link
+                href="/app/link-account"
+                className="px-6 py-3 border-2 border-vault-gray-300 dark:border-vault-gray-600 text-vault-gray-700 dark:text-vault-gray-300 rounded-xl font-semibold hover:bg-vault-gray-100 dark:hover:bg-vault-gray-700 transition-all"
+              >
+                Back to Providers
+              </Link>
+            </div>
           </div>
         </AppShell>
       </ProtectedRoute>
@@ -146,9 +393,9 @@ export default function LinkAccountForm() {
             {/* Provider Header */}
             <div className="flex items-center mb-6">
               <div className="w-20 h-20 bg-vault-gray-100 dark:bg-vault-gray-700 rounded-2xl flex items-center justify-center mr-4 p-2">
-                {provider.logoUrl ? (
+                {provider.logoUrl || provider.logo ? (
                   <img
-                    src={`https://spi.22seven.com/${provider.ttsId}.png`}
+                    src={provider.logoUrl || provider.logo || `https://spi.22seven.com/${provider.id || provider.ttsId}.png`}
                     alt={provider.name}
                     className="w-full h-full object-contain"
                     onError={(e) => {

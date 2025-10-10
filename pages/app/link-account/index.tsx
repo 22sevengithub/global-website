@@ -14,9 +14,31 @@ export default function LinkAccount() {
 
   // Get providers from aggregate data
   const providers = useMemo(() => {
-    if (!aggregate?.serviceProviders) return [];
+    if (!aggregate?.serviceProviders) {
+      console.log('[LinkAccount] No service providers in aggregate');
+      return [];
+    }
+    console.log('[LinkAccount] ========== PROVIDERS LOADED ==========');
+    console.log('[LinkAccount] Total providers in aggregate:', aggregate.serviceProviders.length);
+
+    // Log first 3 providers to see structure
+    console.log('[LinkAccount] Sample providers (first 3):',
+      aggregate.serviceProviders.slice(0, 3).map(p => ({
+        name: p.name,
+        id: p.id,
+        ttsId: p.ttsId,
+        hasId: !!p.id,
+        hasTtsId: !!p.ttsId,
+        integrationProvider: p.integrationProvider,
+        authType: p.authType,
+      }))
+    );
+
     // Filter to only show providers that can be linked
-    return aggregate.serviceProviders.filter(p => p.canLink !== false);
+    const linkableProviders = aggregate.serviceProviders.filter(p => p.canLink !== false);
+    console.log('[LinkAccount] Linkable providers:', linkableProviders.length);
+    console.log('[LinkAccount] ==========================================');
+    return linkableProviders;
   }, [aggregate]);
 
   const filteredProviders = providers.filter(p =>
@@ -30,11 +52,48 @@ export default function LinkAccount() {
     .slice(0, 6); // Show top 6 popular providers
 
   const handleSelectProvider = (provider: ServiceProvider) => {
+    console.log('[LinkAccount] ========== PROVIDER SELECTION DEBUG ==========');
+    console.log('[LinkAccount] Raw provider object:', JSON.stringify(provider, null, 2));
+    console.log('[LinkAccount] Provider keys:', Object.keys(provider));
+    console.log('[LinkAccount] Provider.id type:', typeof provider.id, 'value:', provider.id);
+    console.log('[LinkAccount] Provider.ttsId type:', typeof provider.ttsId, 'value:', provider.ttsId);
+
+    // Use provider.id as the identifier (backend uses 'id', not 'ttsId')
+    const providerId = provider.id || provider.ttsId;
+
+    console.log('[LinkAccount] Selected Provider Details:', {
+      name: provider.name,
+      id: provider.id,
+      ttsId: provider.ttsId,
+      providerId: providerId,
+      hasForm: !!provider.accountLoginForm,
+      fieldCount: provider.accountLoginForm?.accountLoginFields?.length || 0,
+      integrationProvider: provider.integrationProvider,
+      authType: provider.authType,
+    });
+
+    // Validate provider data
+    if (!providerId) {
+      console.error('[LinkAccount] ❌ CRITICAL: Provider has no id or ttsId!');
+      console.error('[LinkAccount] Full provider object:', provider);
+      alert('Invalid provider data. Please try another provider.');
+      return;
+    }
+
+    console.log('[LinkAccount] ✅ Provider ID valid:', providerId);
+    console.log('[LinkAccount] Navigating to:', {
+      pathname: '/app/link-account/form',
+      query: { providerId: providerId }
+    });
+
     // Navigate to linking form with provider data
     router.push({
       pathname: '/app/link-account/form',
-      query: { providerId: provider.ttsId }
+      query: { providerId: providerId }
     });
+
+    console.log('[LinkAccount] Navigation initiated');
+    console.log('[LinkAccount] ================================================');
   };
 
   if (loading || !aggregate) {
@@ -126,14 +185,14 @@ export default function LinkAccount() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {popularProviders.map((provider) => (
                 <button
-                  key={provider.ttsId}
+                  key={provider.id || provider.ttsId}
                   onClick={() => handleSelectProvider(provider)}
                   className="bg-white dark:bg-vault-gray-800 p-4 rounded-xl border-2 border-vault-gray-200 dark:border-vault-gray-700 hover:border-vault-green hover:shadow-lg transition-all text-center group"
                 >
                   <div className="w-16 h-16 bg-vault-gray-100 dark:bg-vault-gray-700 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                    {provider.logoUrl ? (
+                    {provider.logoUrl || provider.logo ? (
                       <img
-                        src={`https://spi.22seven.com/${provider.ttsId}.png`}
+                        src={provider.logoUrl || provider.logo || `https://spi.22seven.com/${provider.id || provider.ttsId}.png`}
                         alt={provider.name}
                         className="w-12 h-12 object-contain"
                         onError={(e) => {
@@ -179,15 +238,15 @@ export default function LinkAccount() {
           ) : (
             filteredProviders.map((provider) => (
               <button
-                key={provider.ttsId}
+                key={provider.id || provider.ttsId}
                 onClick={() => handleSelectProvider(provider)}
                 className="bg-white dark:bg-vault-gray-800 p-6 rounded-2xl border-2 border-vault-gray-200 dark:border-vault-gray-700 hover:border-vault-green hover:shadow-lg transition-all text-left group"
               >
                 <div className="flex items-center">
                   <div className="w-16 h-16 bg-vault-gray-100 dark:bg-vault-gray-700 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
-                    {provider.logoUrl ? (
+                    {provider.logoUrl || provider.logo ? (
                       <img
-                        src={`https://spi.22seven.com/${provider.ttsId}.png`}
+                        src={provider.logoUrl || provider.logo || `https://spi.22seven.com/${provider.id || provider.ttsId}.png`}
                         alt={provider.name}
                         className="w-12 h-12 object-contain"
                         onError={(e) => {
