@@ -58,6 +58,7 @@ export interface Account {
   friendlyName?: string;
   customName?: string;
   accountIcon?: string;
+  manualAccountType?: string;  // Added: Type of manual account (e.g., "Bank", "CreditCard", "Cash")
   providerLoginId?: string;  // Added: Used to identify account provider ("ULTRA THINK" for manual accounts)
   serviceProviderId?: string;  // Added: Service provider ID for linked accounts
   deactivated: boolean;

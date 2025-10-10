@@ -1,4 +1,5 @@
 import Layout from '../components/Layout';
+import FlagIcon from '../components/FlagIcon';
 
 export default function Contact() {
   return (
@@ -44,86 +45,145 @@ export default function Contact() {
           </div>
 
           {/* Download App Section */}
-          <div className="mt-12 bg-gradient-to-br from-vault-green-50 to-white rounded-xl p-8 text-center border border-vault-green-100">
-            <div className="text-4xl mb-4">📱</div>
-            <h2 className="text-2xl font-bold font-display text-vault-black mb-2">
-              Download Our App
-            </h2>
-            <p className="text-sm text-vault-gray-600 mb-8 max-w-md mx-auto">
-              Get Vault22 on your mobile device and start managing your wealth on the go
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center flex-wrap">
-              {/* Apple App Store */}
-              <a
-                href="https://apps.apple.com/us/app/vault22-uae/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block transition-all duration-200 hover:scale-105 hover:opacity-90"
-              >
-                <img
-                  src="/images/app-store-badge.svg"
-                  alt="Download on the App Store"
-                  width="190"
-                  height="60"
-                  style={{ display: 'block' }}
-                />
-              </a>
-
-              {/* Google Play Store */}
-              <a
-                href="https://play.google.com/store/apps/details?id=com.vault22.next.uae&gl=ae"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block transition-all duration-200 hover:scale-105 hover:opacity-90"
-              >
-                <img
-                  src="/images/google-play-badge.svg"
-                  alt="Get it on Google Play"
-                  width="215"
-                  height="60"
-                  style={{ display: 'block' }}
-                />
-              </a>
-
-              {/* Huawei AppGallery */}
-              <a
-                href="https://appgallery.huawei.com/app/C114552769?pkgName=com.vault22.next.uae"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block transition-all duration-200 hover:scale-105 hover:opacity-90"
-              >
-                <img
-                  src="/images/huawei-appgallery-badge.svg"
-                  alt="Explore it on AppGallery"
-                  width="215"
-                  height="60"
-                  style={{ display: 'block' }}
-                />
-              </a>
+          <div className="mt-12 space-y-6">
+            {/* UAE App Download */}
+            <div
+              className="bg-white rounded-2xl shadow-lg border border-vault-gray-100 overflow-hidden hover:shadow-xl transition-all duration-500 animate-fade-in-up"
+              style={{ animationDelay: '0.1s' }}
+            >
+              <div className="bg-gradient-to-r from-vault-blue to-vault-blue-dark px-8 py-6">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  {/* UAE Flag */}
+                  <div className="shadow-lg">
+                    <FlagIcon country="uae" size="lg" />
+                  </div>
+                  <h2 className="text-2xl font-bold font-display text-white">
+                    Vault22 UAE
+                  </h2>
+                </div>
+                <p className="text-sm text-white/90 text-center max-w-lg mx-auto">
+                  Start your wealth journey in the United Arab Emirates
+                </p>
+              </div>
+              <div className="px-8 py-8">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <a
+                    href="https://apps.apple.com/us/app/vault22-uae/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block transition-all duration-300 hover:scale-105 hover:-translate-y-1 animate-fade-in"
+                    style={{ animationDelay: '0.2s' }}
+                  >
+                    <img
+                      src="/images/app-store-badge.svg"
+                      alt="Download on the App Store"
+                      width="180"
+                      height="54"
+                      style={{ display: 'block' }}
+                    />
+                  </a>
+                  <a
+                    href="https://play.google.com/store/apps/details?id=com.vault22.next.uae&gl=ae"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block transition-all duration-300 hover:scale-105 hover:-translate-y-1 animate-fade-in"
+                    style={{ animationDelay: '0.3s' }}
+                  >
+                    <img
+                      src="/images/google-play-badge.svg"
+                      alt="Get it on Google Play"
+                      width="203"
+                      height="54"
+                      style={{ display: 'block' }}
+                    />
+                  </a>
+                  <a
+                    href="https://appgallery.huawei.com/app/C114552769?pkgName=com.vault22.next.uae"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block transition-all duration-300 hover:scale-105 hover:-translate-y-1 animate-fade-in"
+                    style={{ animationDelay: '0.4s' }}
+                  >
+                    <img
+                      src="/images/huawei-appgallery-badge.svg"
+                      alt="Explore it on AppGallery"
+                      width="203"
+                      height="54"
+                      style={{ display: 'block' }}
+                    />
+                  </a>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div className="mt-12 grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-            <div className="text-center p-5 bg-white rounded-lg border border-vault-gray-200 hover:border-vault-gray-300 hover:shadow-sm transition-all">
-              <div className="text-3xl mb-2.5">🇿🇦</div>
-              <h3 className="font-semibold text-vault-black mb-1.5 text-sm">South Africa</h3>
-              <p className="text-xs text-vault-gray-600 mb-2.5">
-                Our established home market
-              </p>
-              <span className="inline-block px-2 py-0.5 bg-vault-green-50 text-vault-green text-xs font-medium rounded-full">
-                Available Now
-              </span>
-            </div>
-            <div className="text-center p-5 bg-white rounded-lg border border-vault-gray-200 hover:border-vault-gray-300 hover:shadow-sm transition-all">
-              <div className="text-3xl mb-2.5">🇦🇪</div>
-              <h3 className="font-semibold text-vault-black mb-1.5 text-sm">UAE</h3>
-              <p className="text-xs text-vault-gray-600 mb-2.5">
-                Now live in the United Arab Emirates
-              </p>
-              <span className="inline-block px-2 py-0.5 bg-vault-green-50 text-vault-green text-xs font-medium rounded-full">
-                Now Live
-              </span>
+            {/* South Africa App Download */}
+            <div
+              className="bg-white rounded-2xl shadow-lg border border-vault-gray-100 overflow-hidden hover:shadow-xl transition-all duration-500 animate-fade-in-up"
+              style={{ animationDelay: '0.2s' }}
+            >
+              <div className="bg-gradient-to-r from-vault-green to-vault-green-dark px-8 py-6">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  {/* South Africa Flag */}
+                  <div className="shadow-lg">
+                    <FlagIcon country="za" size="lg" />
+                  </div>
+                  <h2 className="text-2xl font-bold font-display text-white">
+                    22seven South Africa
+                  </h2>
+                </div>
+                <p className="text-sm text-white/90 text-center max-w-lg mx-auto">
+                  Take control of your finances with South Africa's trusted money app
+                </p>
+              </div>
+              <div className="px-8 py-8">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <a
+                    href="https://apps.apple.com/us/app/apple-store/id611120440"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block transition-all duration-300 hover:scale-105 hover:-translate-y-1 animate-fade-in"
+                    style={{ animationDelay: '0.3s' }}
+                  >
+                    <img
+                      src="/images/app-store-badge.svg"
+                      alt="Download on the App Store"
+                      width="180"
+                      height="54"
+                      style={{ display: 'block' }}
+                    />
+                  </a>
+                  <a
+                    href="https://play.google.com/store/apps/details?id=com.twentytwoseven.android"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block transition-all duration-300 hover:scale-105 hover:-translate-y-1 animate-fade-in"
+                    style={{ animationDelay: '0.4s' }}
+                  >
+                    <img
+                      src="/images/google-play-badge.svg"
+                      alt="Get it on Google Play"
+                      width="203"
+                      height="54"
+                      style={{ display: 'block' }}
+                    />
+                  </a>
+                  <a
+                    href="https://appgallery.huawei.com/app/C100645251"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block transition-all duration-300 hover:scale-105 hover:-translate-y-1 animate-fade-in"
+                    style={{ animationDelay: '0.5s' }}
+                  >
+                    <img
+                      src="/images/huawei-appgallery-badge.svg"
+                      alt="Explore it on AppGallery"
+                      width="203"
+                      height="54"
+                      style={{ display: 'block' }}
+                    />
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>

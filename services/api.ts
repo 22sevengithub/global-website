@@ -823,30 +823,34 @@ export const serviceProviderApi = {
 export const manualAccountApi = {
   /**
    * Create a manual account
+   * POST /customer/{customerId}/accounts/manual
    */
   createManualAccount: async (customerId: string, accountData: any) => {
     console.log(`✍️ Creating manual account for customer: ${customerId}`);
-    const response = await apiClient.post(`/customer/${customerId}/manual-accounts`, accountData);
+    console.log('   Account Data:', accountData);
+    const response = await apiClient.post(`/customer/${customerId}/accounts/manual`, accountData);
     console.log('✅ Manual account created');
     return response.data;
   },
 
   /**
    * Update an existing manual account
+   * PUT /customer/{customerId}/accounts/manual/{accountId}
    */
   updateManualAccount: async (customerId: string, accountId: string, accountData: any) => {
     console.log(`✍️ Updating manual account: ${accountId}`);
-    const response = await apiClient.put(`/customer/${customerId}/manual-accounts/${accountId}`, accountData);
+    const response = await apiClient.put(`/customer/${customerId}/accounts/manual/${accountId}`, accountData);
     console.log('✅ Manual account updated');
     return response.data;
   },
 
   /**
    * Delete a manual account
+   * DELETE /customer/{customerId}/accounts/{accountId}
    */
   deleteManualAccount: async (customerId: string, accountId: string) => {
     console.log(`🗑️ Deleting manual account: ${accountId}`);
-    const response = await apiClient.delete(`/customer/${customerId}/manual-accounts/${accountId}`);
+    const response = await apiClient.delete(`/customer/${customerId}/accounts/${accountId}`);
     console.log('✅ Manual account deleted');
     return response.data;
   },
