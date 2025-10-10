@@ -43,6 +43,67 @@ export default function Contact() {
             </a>
           </div>
 
+          {/* Download App Section */}
+          <div className="mt-12 bg-gradient-to-br from-vault-green-50 to-white rounded-xl p-8 text-center border border-vault-green-100">
+            <div className="text-4xl mb-4">📱</div>
+            <h2 className="text-2xl font-bold font-display text-vault-black mb-2">
+              Download Our App
+            </h2>
+            <p className="text-sm text-vault-gray-600 mb-8 max-w-md mx-auto">
+              Get Vault22 on your mobile device and start managing your wealth on the go
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center flex-wrap">
+              {/* Apple App Store */}
+              <a
+                href="https://apps.apple.com/us/app/vault22-uae/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block transition-all duration-200 hover:scale-105 hover:opacity-90"
+              >
+                <img
+                  src="/images/app-store-badge.svg"
+                  alt="Download on the App Store"
+                  width="190"
+                  height="60"
+                  style={{ display: 'block' }}
+                />
+              </a>
+
+              {/* Google Play Store */}
+              <a
+                href="https://play.google.com/store/apps/details?id=com.vault22.next.uae&gl=ae"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block transition-all duration-200 hover:scale-105 hover:opacity-90"
+              >
+                <img
+                  src="/images/google-play-badge.svg"
+                  alt="Get it on Google Play"
+                  width="215"
+                  height="60"
+                  style={{ display: 'block' }}
+                />
+              </a>
+
+              {/* Huawei AppGallery */}
+              <a
+                href="https://appgallery.huawei.com/app/C114552769?pkgName=com.vault22.next.uae"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block transition-all duration-200 hover:scale-105 hover:opacity-90"
+              >
+                <img
+                  src="/images/huawei-appgallery-badge.svg"
+                  alt="Explore it on AppGallery"
+                  width="215"
+                  height="60"
+                  style={{ display: 'block' }}
+                />
+              </a>
+            </div>
+          </div>
+
           <div className="mt-12 grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             <div className="text-center p-5 bg-white rounded-lg border border-vault-gray-200 hover:border-vault-gray-300 hover:shadow-sm transition-all">
               <div className="text-3xl mb-2.5">🇿🇦</div>

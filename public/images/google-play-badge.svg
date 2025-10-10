@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="215" height="60" viewBox="0 0 215 60">
+  <defs>
+    <linearGradient id="blue" x1="60%" y1="165%" x2="26%" y2="70%">
+      <stop offset="0%" stop-color="#00D6FF"/>
+      <stop offset="100%" stop-color="#007DFF"/>
+    </linearGradient>
+    <linearGradient id="green" x1="107%" y1="23%" x2="-130%" y2="75%">
+      <stop offset="0%" stop-color="#00F076"/>
+      <stop offset="100%" stop-color="#00A94F"/>
+    </linearGradient>
+    <linearGradient id="yellow" x1="86%" y1="30%" x2="-50%" y2="136%">
+      <stop offset="0%" stop-color="#FFCF00"/>
+      <stop offset="100%" stop-color="#FFAA00"/>
+    </linearGradient>
+    <linearGradient id="red" x1="-18%" y1="-11%" x2="42%" y2="35%">
+      <stop offset="0%" stop-color="#FF5050"/>
+      <stop offset="100%" stop-color="#C91162"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="215" height="60" rx="7" fill="#000000"/>
+
+  <!-- Google Play Triangle Logo -->
+  <g transform="translate(14, 13) scale(0.95)">
+    <path d="M10.435 7.538c-.29.305-.464.77-.464 1.38v22.165c0 .61.174 1.074.464 1.379l.072.07 12.418-12.418v-.291L10.507 7.467l-.072.071z" fill="url(#green)"/>
+    <path d="M27.063 24.061l-4.138-4.138v-.291l4.138-4.138.093.054 4.906 2.786c1.4.794 1.4 2.093 0 2.888l-4.906 2.785-.093.054z" fill="url(#yellow)"/>
+    <path d="M27.156 24.007l-4.231-4.231-12.49 12.49c.464.487 1.226.548 2.092.093l14.629-8.298" fill="url(#red)"/>
+    <path d="M27.156 15.995L12.527 7.697c-.866-.455-1.628-.394-2.092.093l12.49 12.49 4.231-4.231v-.054z" fill="url(#blue)"/>
+  </g>
+
+  <!-- Text -->
+  <text x="58" y="21" font-family="Arial, sans-serif" font-size="10.5" fill="#FFFFFF">GET IT ON</text>
+  <text x="58" y="42" font-family="Arial, sans-serif" font-size="23" font-weight="600" fill="#FFFFFF">Google Play</text>
+</svg>
