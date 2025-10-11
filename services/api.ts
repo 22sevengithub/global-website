@@ -110,7 +110,7 @@ export const authApi = {
   },
 
   /**
-   * Register new user
+   * Register new user (legacy endpoint - keeping for compatibility)
    */
   register: async (name: string, surname: string, email: string, password: string) => {
     const response = await apiClient.put('/register', {
@@ -126,6 +126,52 @@ export const authApi = {
       },
     });
 
+    return response.data;
+  },
+
+  /**
+   * Verify personal information (Step 1 of registration V2)
+   * POST /verify-personal-information
+   * Validates user data before account creation
+   */
+  verifyPersonalInformation: async (userData: {
+    firstName: string;
+    surName: string;
+    email: string;
+    phoneNumber: string;
+    countryCode: string;
+    dateOfBirth?: string | null;
+  }) => {
+    // Build payload - omit undefined fields or send null (matching mobile app)
+    const payload: any = {
+      firstName: userData.firstName,
+      surName: userData.surName,
+      email: userData.email,
+      phoneNumber: userData.phoneNumber,
+      countryCode: userData.countryCode,
+      dateOfBirth: userData.dateOfBirth || null,  // Send null if not provided (matches mobile app)
+    };
+
+    const response = await apiClient.post('/verify-personal-information', payload);
+    return response.data;
+  },
+
+  /**
+   * Register user V2 (Step 2 of registration)
+   * POST /register-v2
+   * Creates account with complete user data including password
+   */
+  registerV2: async (userData: {
+    email: string;
+    password: string;
+    firstName: string;
+    surName: string;
+    phoneNumber: string;
+    countryCode: string;
+    dateOfBirth: string;
+    vaultProfileCountryCode?: string;
+  }) => {
+    const response = await apiClient.post('/register-v2', userData);
     return response.data;
   },
 
