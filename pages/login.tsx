@@ -404,7 +404,13 @@ export default function Login() {
                 {/* Alternative Login */}
                 <div className="mt-8 pt-6 border-t border-vault-gray-200 dark:border-vault-gray-700">
                   <p className="text-center text-sm text-vault-gray-600 dark:text-vault-gray-400 mb-4">
-                    Need help? Contact support
+                    Don't have an account?{' '}
+                    <button
+                      onClick={() => router.push('/signup')}
+                      className="text-vault-green hover:underline font-semibold"
+                    >
+                      Sign Up
+                    </button>
                   </p>
 
                   {/* Demo/Test Login Button */}
