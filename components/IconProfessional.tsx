@@ -1,14 +1,21 @@
 import Image from 'next/image';
 
 /**
- * Professional Icon Component
+ * Professional Icon System
  *
- * Design System Features:
- * - Color variants for semantic meaning
- * - Responsive sizing
- * - Accessibility support
+ * Design System:
+ * - Filled: Solid icons for primary actions and active states
+ * - Outlined: Line-based icons for secondary actions and default states
+ * - Duotone: Two-tone icons for special emphasis
+ *
+ * Color Palette:
+ * - Primary: Vault Green (#00D66E)
+ * - Secondary: Vault Blue (#0066FF)
+ * - Neutral: Gray scale
+ * - Accent: Custom colors for special cases
  */
 
+export type IconVariant = 'filled' | 'outlined' | 'duotone';
 export type IconColor =
   | 'primary'       // Vault Green
   | 'secondary'     // Vault Blue
@@ -19,21 +26,23 @@ export type IconColor =
   | 'white'         // White
   | 'inherit';      // Inherit from parent
 
-interface IconProps {
+interface IconProfessionalProps {
   name: string;
   className?: string;
   size?: number;
+  variant?: IconVariant;
   color?: IconColor;
   opacity?: number;
 }
 
-export default function Icon({
+export default function IconProfessional({
   name,
   className = '',
   size = 24,
-  color = 'inherit',
+  variant = 'outlined',
+  color = 'neutral',
   opacity = 1
-}: IconProps) {
+}: IconProfessionalProps) {
   // PNG icons from mobile app (all icon names that have .png extension)
   const pngIcons = [
     // Navigation icons
@@ -78,6 +87,8 @@ export default function Icon({
     'rewards', 'vehicles', 'other',
     // Manual account SVG
     'manual_account/savings',
+    // Navigation and UI
+    'accounts', 'dashboard', 'exit', 'goals', 'health-score', 'settings',
   ];
 
   // Check if name includes subfolder (e.g., "manual_account/bank")
@@ -96,51 +107,68 @@ export default function Icon({
 
   const iconPath = `/icons/${name}.${isPng ? 'png' : 'svg'}`;
 
-  // Apply filter to make navigation/UI PNG icons monochrome
-  // Account group icons and manual account icons should keep their original colors
-  const imageClassName = 'w-full h-full object-contain';
-
-  // Account group icons that should NOT be filtered (keep their colors)
-  const accountGroupIcons = ['investments', 'home_loan', 'vehicle_loans', 'home', 'bank', 'credit',
-                              'cryptocurrency', 'loans', 'property', 'rewards', 'vehicles', 'other', 'retirement'];
-
-  // Only apply monochrome filter to navigation/UI PNG icons
-  // Exclude manual account icons and account group icons
-  const shouldApplyFilter = isPng && !isManualAccountIcon && !accountGroupIcons.includes(name);
-
-  // Professional color palette mapping
+  // Color mapping for professional palette
   const colorMap: Record<IconColor, string> = {
     primary: 'text-vault-green',
     secondary: 'text-vault-blue',
-    success: 'text-emerald-500',
-    warning: 'text-amber-500',
+    success: 'text-green-500',
+    warning: 'text-yellow-500',
     error: 'text-red-500',
     neutral: 'text-vault-gray-600 dark:text-vault-gray-400',
     white: 'text-white',
     inherit: ''
   };
 
-  const colorClass = color !== 'inherit' ? colorMap[color] : '';
+  // Account group icons that should keep their original colors (no filter)
+  const accountGroupIcons = ['investments', 'home_loan', 'vehicle_loans', 'home', 'bank', 'credit',
+                              'cryptocurrency', 'loans', 'property', 'rewards', 'vehicles', 'other', 'retirement'];
+
+  // Determine if icon should be monochrome or colored
+  const shouldApplyFilter = isPng && !isManualAccountIcon && !accountGroupIcons.includes(name);
+
+  // Get color class
+  const colorClass = colorMap[color] || colorMap.neutral;
+
+  // Variant-based styling
+  const variantStyles: Record<IconVariant, string> = {
+    filled: 'drop-shadow-sm',
+    outlined: '',
+    duotone: 'opacity-90'
+  };
 
   return (
     <div
-      className={`inline-flex items-center justify-center transition-colors ${colorClass} ${className}`}
+      className={`inline-flex items-center justify-center ${colorClass} ${variantStyles[variant]} ${className}`}
       style={{
         width: size,
         height: size,
         opacity: opacity,
-        // Make all PNG icons monochrome EXCEPT manual account icons
-        filter: shouldApplyFilter ? 'brightness(0) saturate(100%)' : 'none',
       }}
     >
-      <Image
-        src={iconPath}
-        alt={name}
-        width={size}
-        height={size}
-        className={imageClassName}
-        unoptimized // Required for static export
-      />
+      {isSvg ? (
+        <svg
+          width={size}
+          height={size}
+          className="w-full h-full"
+          style={{
+            filter: shouldApplyFilter ? 'brightness(0) saturate(100%)' : 'none',
+          }}
+        >
+          <use href={`${iconPath}#icon`} />
+        </svg>
+      ) : (
+        <Image
+          src={iconPath}
+          alt={name}
+          width={size}
+          height={size}
+          className="w-full h-full object-contain"
+          style={{
+            filter: shouldApplyFilter ? 'brightness(0) saturate(100%)' : 'none',
+          }}
+          unoptimized // Required for static export
+        />
+      )}
     </div>
   );
 }

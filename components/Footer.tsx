@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import FlagIcon from './FlagIcon';
 
 export default function Footer() {
   return (
@@ -79,12 +80,39 @@ export default function Footer() {
                   Going Global
                 </Link>
               </li>
-              <li>
-                <Link href="/about#regions" className="text-sm text-vault-gray-400 hover:text-vault-green transition-colors">
-                  UAE Expansion
+
+              {/* UAE Links */}
+              <li className="pt-2">
+                <Link href="/about#regions" className="text-sm text-vault-gray-300 hover:text-vault-green transition-colors font-medium flex items-center">
+                  <FlagIcon country="uae" size="sm" className="mr-2" />
+                  UAE
                 </Link>
               </li>
-              <li>
+
+              {/* South Africa Links */}
+              <li className="pt-1">
+                <a href="https://www.vault22.io/za" className="text-sm text-vault-gray-300 hover:text-vault-green transition-colors font-medium flex items-center">
+                  <FlagIcon country="za" size="sm" className="mr-2" />
+                  South Africa
+                </a>
+              </li>
+              <li className="ml-4">
+                <a href="https://www.vault22.io/za/grow" className="text-sm text-vault-gray-400 hover:text-vault-green transition-colors">
+                  Grow
+                </a>
+              </li>
+              <li className="ml-4">
+                <a href="https://www.vault22.io/za/protect" className="text-sm text-vault-gray-400 hover:text-vault-green transition-colors">
+                  Protect
+                </a>
+              </li>
+              <li className="ml-4">
+                <a href="http://app.22seven.com/" className="text-sm text-vault-gray-400 hover:text-vault-green transition-colors">
+                  Login (22seven)
+                </a>
+              </li>
+
+              <li className="pt-2">
                 <Link href="/faq" className="text-sm text-vault-gray-400 hover:text-vault-green transition-colors">
                   FAQ
                 </Link>
@@ -102,13 +130,23 @@ export default function Footer() {
             <h3 className="text-sm font-semibold font-display mb-4 uppercase tracking-wider text-vault-gray-200">Resources</h3>
             <ul className="space-y-2.5">
               <li>
-                <a href="#" className="text-sm text-vault-gray-400 hover:text-vault-green transition-colors">
+                <a href="https://www.vault22.io/blog" className="text-sm text-vault-gray-400 hover:text-vault-green transition-colors">
                   Blog
                 </a>
               </li>
               <li>
-                <a href="#" className="text-sm text-vault-gray-400 hover:text-vault-green transition-colors">
-                  Financial Guides
+                <a href="https://conversations.22seven.com/hc/en-us" className="text-sm text-vault-gray-400 hover:text-vault-green transition-colors">
+                  Help Centre (SA)
+                </a>
+              </li>
+              <li>
+                <a href="https://www.vault22.io/security" className="text-sm text-vault-gray-400 hover:text-vault-green transition-colors">
+                  Security
+                </a>
+              </li>
+              <li>
+                <a href="https://www.vault22.io/vault22-in-the-media" className="text-sm text-vault-gray-400 hover:text-vault-green transition-colors">
+                  Vault22 in the Media
                 </a>
               </li>
               <li>
@@ -119,11 +157,6 @@ export default function Footer() {
               <li>
                 <a href="#" className="text-sm text-vault-gray-400 hover:text-vault-green transition-colors">
                   Terms of Service
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-sm text-vault-gray-400 hover:text-vault-green transition-colors">
-                  Security
                 </a>
               </li>
             </ul>

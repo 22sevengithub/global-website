@@ -1,22 +1,43 @@
 import AppShell from '../../components/AppShell';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import LoadingAnimation from '../../components/LoadingAnimation';
+import Icon from '../../components/Icon';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { calculateNetWorth, getAssetsByType, getLiabilitiesByType } from '../../utils/netWorth';
 import { formatMoney, convertCurrency } from '../../utils/currency';
 import { accountApi } from '../../services/api';
+import { getAccountTypeIcon } from '../../constants/manualAccountTypes';
+import { groupAccounts, type AccountGroup } from '../../utils/accountGroups';
 
 export default function Accounts() {
   const { aggregate, customerInfo, loading, loadAggregate } = useApp();
   const { selectedCurrency } = useCurrency();
   const [showAddModal, setShowAddModal] = useState(false);
-  const [activeFilter, setActiveFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
-  if (loading || !aggregate) {
+  // Calculate data and group accounts using mobile app logic - MUST be before early return
+  const currency = selectedCurrency;
+  const netWorthData = useMemo(() =>
+    aggregate ? calculateNetWorth(aggregate.accounts, currency, aggregate.exchangeRates) : null,
+    [aggregate, currency]
+  );
+  const assetsByType = useMemo(() =>
+    aggregate ? getAssetsByType(aggregate.accounts, currency, aggregate.exchangeRates) : [],
+    [aggregate, currency]
+  );
+  const liabilitiesByType = useMemo(() =>
+    aggregate ? getLiabilitiesByType(aggregate.accounts, currency, aggregate.exchangeRates) : [],
+    [aggregate, currency]
+  );
+  const accountGroups = useMemo(() => {
+    return aggregate ? groupAccounts(aggregate.accounts, aggregate.exchangeRates, currency) : [];
+  }, [aggregate, currency]);
+
+  if (loading || !aggregate || !netWorthData) {
     return (
       <ProtectedRoute>
         <AppShell title="Accounts | Vault22">
@@ -31,51 +52,76 @@ export default function Accounts() {
     );
   }
 
-  const currency = selectedCurrency;
-  const netWorthData = calculateNetWorth(aggregate.accounts, currency, aggregate.exchangeRates);
-  const assetsByType = getAssetsByType(aggregate.accounts, currency, aggregate.exchangeRates);
-  const liabilitiesByType = getLiabilitiesByType(aggregate.accounts, currency, aggregate.exchangeRates);
+  // Get account icon path - matches mobile app logic exactly (reorderable_accounts.dart:98-120)
+  const getAccountIconData = (account: any): { isLocal: boolean; iconPath: string } => {
+    // 1. Check if this is a crypto account - highest priority
+    const isCryptoAccount =
+      account.accountClass === 'Crypto' ||
+      (account.accountClass === 'Manual' &&
+        (account.manualAccountType === 'Crypto' ||
+          account.accountType === 'Crypto' ||
+          account.accountIcon === 'Crypto'));
 
-  // Filter accounts
-  const filteredAccounts = aggregate.accounts.filter(account => {
-    if (activeFilter === 'all') return true;
-    if (activeFilter === 'banks') return account.accountType === 'Bank' || account.accountType === 'CreditCard';
-    if (activeFilter === 'investments') return account.accountType === 'Investment';
-    if (activeFilter === 'crypto') return account.accountType === 'Cryptocurrency';
-    return true;
-  });
+    if (isCryptoAccount) {
+      // TODO: Implement specific coin icon lookup from crypto holdings
+      // For now, use generic cryptocurrency icon
+      return {
+        isLocal: true,
+        iconPath: 'cryptocurrency'
+      };
+    }
 
-  // Get icon for account type
-  const getAccountIcon = (type: string) => {
-    const icons: Record<string, string> = {
-      'Bank': '/icons/bank.svg',
-      'Savings': '/icons/cash.svg',
-      'CreditCard': '/icons/credit.svg',
-      'Investment': '/icons/investments.svg',
-      'Cryptocurrency': '/icons/cryptocurrency.svg',
-      'RealEstate': '/icons/property.svg',
-      'Loan': '/icons/loans.svg',
-      'Insurance': '/icons/other.svg',
-      'Retirement': '/icons/retirement.svg',
-      'Rewards': '/icons/rewards.svg',
-      'Vehicle': '/icons/vehicles.svg'
+    // 2. Check for custom accountIconImageUrl (if exists)
+    if (account.accountIconImageUrl) {
+      return {
+        isLocal: false,
+        iconPath: account.accountIconImageUrl
+      };
+    }
+
+    // 3. For manual accounts, use manual_account icons
+    if (account.accountClass === 'Manual') {
+      // Logic from mobile app: selectManualTypeIcon()
+      // If accountIcon is "Manual" or null, use manualAccountType or accountType
+      // Otherwise, use the accountIcon value directly
+      if (account.accountIcon === 'Manual' || !account.accountIcon) {
+        // Use manualAccountType or accountType, and map it through getAccountTypeIcon
+        const typeId = account.manualAccountType || account.accountType || 'SomethingElse';
+        return {
+          isLocal: true,
+          iconPath: getAccountTypeIcon(typeId) // This returns "manual_account/icon_name"
+        };
+      } else {
+        // accountIcon is already the icon file name (e.g., "bank", "credit_card")
+        // Just prepend "manual_account/"
+        return {
+          isLocal: true,
+          iconPath: `manual_account/${account.accountIcon}`
+        };
+      }
+    }
+
+    // 4. For linked accounts, use service provider icon
+    if (account.serviceProviderId) {
+      return {
+        isLocal: false,
+        iconPath: `https://spi.22seven.com/246/${account.serviceProviderId}.png`
+      };
+    }
+
+    // Fallback to default icon
+    return {
+      isLocal: true,
+      iconPath: 'manual_account/default'
     };
-    return icons[type] || '/icons/other.svg';
   };
 
-  // Get color for account type
-  const getAccountColor = (type: string) => {
-    const colors: Record<string, string> = {
-      'Bank': 'bg-blue-500',
-      'Savings': 'bg-green-500',
-      'CreditCard': 'bg-yellow-500',
-      'Investment': 'bg-purple-500',
-      'Cryptocurrency': 'bg-orange-500',
-      'RealEstate': 'bg-indigo-500',
-      'Loan': 'bg-red-500',
-      'Insurance': 'bg-teal-500'
-    };
-    return colors[type] || 'bg-vault-gray-500';
+  // Toggle group expansion
+  const toggleGroup = (groupName: string) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupName]: !prev[groupName]
+    }));
   };
 
   const handleRefresh = async () => {
@@ -127,48 +173,9 @@ export default function Accounts() {
 
         {/* Actions */}
         <div className="flex items-center justify-between mb-6 animate-stagger-4">
-          <div className="flex gap-3">
-            <button
-              onClick={() => setActiveFilter('all')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                activeFilter === 'all'
-                  ? 'bg-vault-gray-200 dark:bg-vault-gray-600 text-vault-gray-700 dark:text-vault-gray-300'
-                  : 'text-vault-gray-600 dark:text-vault-gray-400 hover:bg-vault-gray-100 dark:hover:bg-vault-gray-700'
-              }`}
-            >
-              All Accounts
-            </button>
-            <button
-              onClick={() => setActiveFilter('banks')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                activeFilter === 'banks'
-                  ? 'bg-vault-gray-200 dark:bg-vault-gray-600 text-vault-gray-700 dark:text-vault-gray-300'
-                  : 'text-vault-gray-600 dark:text-vault-gray-400 hover:bg-vault-gray-100 dark:hover:bg-vault-gray-700'
-              }`}
-            >
-              Banks
-            </button>
-            <button
-              onClick={() => setActiveFilter('investments')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                activeFilter === 'investments'
-                  ? 'bg-vault-gray-200 dark:bg-vault-gray-600 text-vault-gray-700 dark:text-vault-gray-300'
-                  : 'text-vault-gray-600 dark:text-vault-gray-400 hover:bg-vault-gray-100 dark:hover:bg-vault-gray-700'
-              }`}
-            >
-              Investments
-            </button>
-            <button
-              onClick={() => setActiveFilter('crypto')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                activeFilter === 'crypto'
-                  ? 'bg-vault-gray-200 dark:bg-vault-gray-600 text-vault-gray-700 dark:text-vault-gray-300'
-                  : 'text-vault-gray-600 dark:text-vault-gray-400 hover:bg-vault-gray-100 dark:hover:bg-vault-gray-700'
-              }`}
-            >
-              Crypto
-            </button>
-          </div>
+          <h2 className="text-2xl font-bold text-vault-black dark:text-white">
+            Account Groups
+          </h2>
           <button
             onClick={() => setShowAddModal(true)}
             className="px-6 py-2 bg-vault-green text-vault-black dark:text-white rounded-full font-semibold hover:bg-vault-green-light transition-all duration-200 hover:shadow-lg hover:scale-105 flex items-center"
@@ -180,83 +187,117 @@ export default function Accounts() {
           </button>
         </div>
 
-        {/* Accounts Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAccounts.map((account, index) => {
-            // Get balance from have/owe like Flutter does
-            const haveAmount = account.have?.amount || 0;
-            const accountCurrency = account.currentBalance?.currencyCode || account.currencyCode || currency;
-
-            // Convert to selected currency if needed
-            let displayBalance = Math.abs(haveAmount);
-            if (accountCurrency.toUpperCase() !== currency.toUpperCase()) {
-              const converted = convertCurrency(
-                Math.abs(haveAmount),
-                accountCurrency,
-                currency,
-                aggregate.exchangeRates
-              );
-              displayBalance = converted !== null ? converted : displayBalance;
-            }
-
-            const isLiability = haveAmount < 0;
+        {/* Account Groups */}
+        <div className="space-y-4">
+          {accountGroups.map((group, groupIndex) => {
+            const isExpanded = expandedGroups[group.name] || false;
 
             return (
               <div
-                key={account.id}
-                className="bg-white dark:bg-vault-gray-800 p-6 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700 hover:border-vault-green hover:shadow-lg transition-all duration-300 cursor-pointer group hover:scale-105"
+                key={group.name}
+                className="bg-white dark:bg-vault-gray-800 rounded-2xl border border-vault-gray-200 dark:border-vault-gray-700 overflow-hidden animate-stagger-4"
                 style={{
-                  animation: `fadeInUp 0.3s ease-out ${0.5 + index * 0.1}s both`
+                  animation: `fadeInUp 0.3s ease-out ${0.5 + groupIndex * 0.1}s both`
                 }}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`w-12 h-12 ${getAccountColor(account.accountType || '')} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform p-2`}>
-                    <img src={getAccountIcon(account.accountType || '')} alt={account.accountType || 'account'} className="w-full h-full object-contain" />
+                {/* Group Header */}
+                <button
+                  onClick={() => toggleGroup(group.name)}
+                  className="w-full p-6 flex items-center justify-between hover:bg-vault-gray-50 dark:hover:bg-vault-gray-700/50 transition-all"
+                >
+                  <div className="flex items-center flex-1">
+                    <div className="w-12 h-12 bg-vault-gray-100 dark:bg-vault-gray-700 rounded-xl flex items-center justify-center mr-4 p-2">
+                      <Icon name={group.iconPath} size={32} />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <h3 className="text-lg font-bold text-vault-black dark:text-white">
+                        {group.name}
+                      </h3>
+                      <p className="text-sm text-vault-gray-500">
+                        {group.accounts.length} {group.accounts.length === 1 ? 'account' : 'accounts'}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleRefresh}
-                      disabled={refreshing}
-                      className="p-2 hover:bg-vault-gray-100 dark:hover:bg-vault-gray-600 rounded-lg transition-all disabled:opacity-50"
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className={`text-2xl font-bold ${group.total < 0 ? 'text-red-500' : 'text-vault-black dark:text-white'}`}>
+                        {formatMoney(group.total, currency)}
+                      </p>
+                    </div>
+                    <svg
+                      className={`w-6 h-6 text-vault-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <svg className={`w-5 h-5 text-vault-gray-600 dark:text-vault-gray-400 ${refreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                    </button>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                   </div>
-                </div>
-                <h3 className="text-lg font-bold text-vault-black dark:text-white mb-1">{account.name}</h3>
-                <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400 mb-4">{account.accountType}</p>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-vault-gray-500 mb-1">Balance</p>
-                    <p className={`text-2xl font-bold ${isLiability ? 'text-red-500' : 'text-vault-black dark:text-white'}`}>
-                      {formatMoney(displayBalance, currency)}
-                    </p>
+                </button>
+
+                {/* Group Accounts */}
+                {isExpanded && (
+                  <div className="border-t border-vault-gray-200 dark:border-vault-gray-700">
+                    {group.accounts.map((account, accountIndex) => {
+                      const haveAmount = account.have?.amount || 0;
+                      const accountCurrency = account.currentBalance?.currencyCode || account.currencyCode || currency;
+
+                      // Convert to selected currency if needed
+                      let displayBalance = Math.abs(haveAmount);
+                      if (accountCurrency.toUpperCase() !== currency.toUpperCase()) {
+                        const converted = convertCurrency(
+                          Math.abs(haveAmount),
+                          accountCurrency,
+                          currency,
+                          aggregate.exchangeRates
+                        );
+                        displayBalance = converted !== null ? converted : displayBalance;
+                      }
+
+                      const isLiability = haveAmount < 0;
+                      const iconData = getAccountIconData(account);
+
+                      return (
+                        <Link
+                          key={account.id}
+                          href={`/app/accounts/${account.id}`}
+                          className="flex items-center p-4 hover:bg-vault-gray-50 dark:hover:bg-vault-gray-700/50 transition-all border-b border-vault-gray-100 dark:border-vault-gray-700 last:border-b-0"
+                        >
+                          <div className="w-10 h-10 bg-vault-gray-100 dark:bg-vault-gray-700 rounded-xl flex items-center justify-center mr-4 p-2 flex-shrink-0">
+                            {iconData.isLocal ? (
+                              <Icon name={iconData.iconPath} size={24} />
+                            ) : (
+                              <img
+                                src={iconData.iconPath}
+                                alt={account.name}
+                                className="w-full h-full object-contain"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-vault-black dark:text-white truncate">
+                              {account.name}
+                            </h4>
+                            <p className="text-sm text-vault-gray-500 truncate">
+                              {account.accountType}
+                            </p>
+                          </div>
+                          <div className="text-right ml-4">
+                            <p className={`text-lg font-bold ${isLiability ? 'text-red-500' : 'text-vault-black dark:text-white'}`}>
+                              {formatMoney(displayBalance, currency)}
+                            </p>
+                          </div>
+                        </Link>
+                      );
+                    })}
                   </div>
-                  <div className={`px-3 py-1 rounded-full text-xs font-semibold ${!account.deactivated ? 'bg-vault-green/20 text-vault-green' : 'bg-vault-gray-200 dark:bg-vault-gray-600 text-vault-gray-600 dark:text-vault-gray-400'}`}>
-                    {!account.deactivated ? 'active' : 'inactive'}
-                  </div>
-                </div>
+                )}
               </div>
             );
           })}
-
-          {/* Add Account Card */}
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-vault-gray-50 dark:bg-vault-gray-700 border-2 border-dashed border-vault-gray-300 dark:border-vault-gray-600 p-6 rounded-2xl hover:border-vault-green hover:bg-vault-green/5 transition-all duration-300 group hover:scale-105 animate-stagger-5"
-          >
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="w-16 h-16 bg-vault-green/20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200">
-                <svg className="w-8 h-8 text-vault-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-vault-black dark:text-white mb-2">Add New Account</h3>
-              <p className="text-sm text-vault-gray-600 dark:text-vault-gray-400">Connect a bank or add manually</p>
-            </div>
-          </button>
         </div>
 
         {/* Add Account Modal (simplified) */}

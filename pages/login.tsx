@@ -1,5 +1,6 @@
 import Layout from '../components/Layout';
 import LoadingAnimation from '../components/LoadingAnimation';
+import FlagIcon from '../components/FlagIcon';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useApp } from '../contexts/AppContext';
@@ -305,7 +306,7 @@ export default function Login() {
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <span className="text-2xl">🇦🇪</span>
+                          <FlagIcon country="uae" size="md" />
                         </div>
                         <input
                           type="tel"

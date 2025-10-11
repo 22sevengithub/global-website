@@ -1,5 +1,6 @@
 import Layout from '../components/Layout';
 import Link from 'next/link';
+import FlagIcon from '../components/FlagIcon';
 
 export default function About() {
   return (
@@ -184,7 +185,9 @@ export default function About() {
           {/* South Africa - Established Market */}
           <div className="mb-12 bg-gradient-to-br from-vault-green/10 to-vault-blue/10 rounded-2xl p-8 border-2 border-vault-green">
             <div className="flex items-center mb-6">
-              <div className="text-5xl mr-4">🇿🇦</div>
+              <div className="shadow-lg mr-4">
+                <FlagIcon country="za" size="lg" />
+              </div>
               <div>
                 <h3 className="text-3xl font-bold font-display text-vault-black">South Africa</h3>
                 <span className="inline-block px-3 py-1 bg-vault-green text-vault-black text-sm font-semibold rounded-full mt-2">
@@ -236,7 +239,9 @@ export default function About() {
             {/* UAE Section */}
             <div className="bg-gradient-to-br from-vault-green/10 to-vault-blue/10 rounded-2xl p-8 border-2 border-vault-green">
               <div className="flex items-center mb-6">
-                <div className="text-5xl mr-4">🇦🇪</div>
+                <div className="shadow-lg mr-4">
+                  <FlagIcon country="uae" size="lg" />
+                </div>
                 <div>
                   <h3 className="text-3xl font-bold font-display text-vault-black">United Arab Emirates</h3>
                   <span className="inline-block px-3 py-1 bg-vault-green text-vault-black text-sm font-semibold rounded-full mt-2">
