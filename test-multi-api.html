@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-API Configuration Test</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0F0F16;
+            color: #00D66E;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #1a1a20;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 214, 110, 0.2);
+        }
+        h1 {
+            color: #FFCB05;
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #252530;
+            border-left: 4px solid #00D66E;
+            border-radius: 5px;
+        }
+        .section h2 {
+            color: #FFCB05;
+            margin-top: 0;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: rgba(0, 214, 110, 0.2);
+            color: #00D66E;
+        }
+        .status.error {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff6b6b;
+        }
+        .status.warning {
+            background: rgba(255, 203, 5, 0.2);
+            color: #FFCB05;
+        }
+        code {
+            background: #0F0F16;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #0066FF;
+        }
+        .button {
+            background: #00D66E;
+            color: #0F0F16;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        .button:hover {
+            background: #FFCB05;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 203, 5, 0.4);
+        }
+        .console-output {
+            background: #0F0F16;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .provider-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .provider-card {
+            background: #0F0F16;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #00D66E;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 Multi-API Configuration Test</h1>
+
+        <div class="section">
+            <h2>📋 Instructions</h2>
+            <ol>
+                <li><strong>Logout</strong> from your current session (go to /app/more → Logout)</li>
+                <li><strong>Login</strong> again (go to /login)</li>
+                <li><strong>Open Developer Console</strong> (F12 or Cmd+Option+I)</li>
+                <li><strong>Look for these logs:</strong>
+                    <ul>
+                        <li>╔════════════════════ MULTI-API MODE CHECK ════════════════════╗</li>
+                        <li>🔍🔍🔍 [PostLogin] Multi-API check result: isMultiApiEnabled=<strong>true</strong></li>
+                        <li>✅✅✅ [PostLogin] Multi-API mode is ENABLED!</li>
+                        <li>🌍🌍🌍 [MultiAPI] fetchProvidersFromAllApis() CALLED</li>
+                        <li>📡 [MultiAPI] Found <strong>2</strong> enabled APIs</li>
+                    </ul>
+                </li>
+                <li><strong>Go to Link Account</strong> page (/app/link-account)</li>
+                <li><strong>Check Provider Count:</strong> Should be 80-100 providers (not just 10-15)</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>✅ Expected Console Output</h2>
+            <div class="console-output">
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    MULTI-API MODE CHECK                                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+🔍🔍🔍 [MultiAPI] isMultiApiEnabled() called
+   API_CONFIGS: [
+     { name: 'Global/UAE', enabled: true, baseUrl: 'https://api-global.dev.vault22.io' },
+     { name: 'SA Production', enabled: true, baseUrl: 'https://api.22seven.com' }
+   ]
+   Enabled APIs count: 2
+   Multi-API enabled? true
+🔍🔍🔍 [PostLogin] Multi-API check result: isMultiApiEnabled=true
+
+✅✅✅ [PostLogin] Multi-API mode is ENABLED! Fetching providers from all APIs...
+
+📞 [PostLogin] Calling fetchProvidersFromAllApis(customerId)...
+
+================================================================================
+🌍🌍🌍 [MultiAPI] fetchProvidersFromAllApis() CALLED
+   Customer ID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+   Has session tokens? { sessionToken: true, requestToken: true }
+================================================================================
+
+📡 [MultiAPI] Found 2 enabled APIs:
+   - Global/UAE: https://api-global.dev.vault22.io (priority: 100)
+   - SA Production: https://api.22seven.com (priority: 90)
+
+🔍 [MultiAPI] Fetching providers from Global/UAE (https://api-global.dev.vault22.io)...
+   Trying authenticated fetch from Global/UAE...
+   ✅ Authenticated fetch successful from Global/UAE
+✅ [MultiAPI] Fetched 15 providers from Global/UAE
+
+🔍 [MultiAPI] Fetching providers from SA Production (https://api.22seven.com)...
+   Trying authenticated fetch from SA Production...
+   ⚠️ Auth failed for SA Production (401), trying public endpoint...
+   ✅ Public endpoint successful from SA Production
+✅ [MultiAPI] Fetched 72 providers from SA Production
+
+✅ [MultiAPI] Merged 87 unique providers from 2 APIs
+📊 [MultiAPI] Providers by source: { "Global/UAE": 15, "SA Production": 72 }
+
+📥 [PostLogin] fetchProvidersFromAllApis returned 87 providers
+
+✅✅✅ [PostLogin] MULTI-API SUCCESS!
+   Original provider count: 15
+   Multi-API provider count: 87
+   Difference: +72 providers
+
+[LinkAccount] ========== PROVIDERS LOADED ==========
+[LinkAccount] Total providers: 87
+[LinkAccount] Providers by type: { LEAN: 10, YODLEE: 72, VEZGO: 5 }
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>❌ If You See This Instead (PROBLEM)</h2>
+            <div class="status error">
+                ⚠️⚠️⚠️ [PostLogin] Multi-API mode is DISABLED (only 1 API configured)
+            </div>
+            <p><strong>This means:</strong> Only 1 API is enabled in the configuration.</p>
+            <p><strong>Solution:</strong> Check services/multiApiService.ts lines 31-46</p>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Configuration Check</h2>
+            <p><strong>Environment Variables (.env.local):</strong></p>
+            <div class="console-output">
+NEXT_PUBLIC_API_URL=https://api-global.dev.vault22.io
+NEXT_PUBLIC_SA_API_URL=https://api.22seven.com
+NEXT_PUBLIC_MULTI_API_ENABLED=true
+            </div>
+
+            <p><strong>API Configs (services/multiApiService.ts):</strong></p>
+            <div class="console-output">
+const API_CONFIGS: ApiConfig[] = [
+  {
+    name: 'Global/UAE',
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api-global.dev.vault22.io',
+    priority: 100,
+    enabled: true,  ← MUST BE TRUE
+  },
+  {
+    name: 'SA Production',
+    baseUrl: process.env.NEXT_PUBLIC_SA_API_URL || 'https://api.22seven.com',
+    priority: 90,
+    enabled: true,  ← MUST BE TRUE
+  },
+];
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Success Criteria</h2>
+            <div class="status success">✅ isMultiApiEnabled=true</div>
+            <div class="status success">✅ Found 2 enabled APIs</div>
+            <div class="status success">✅ Fetched 72 providers from SA Production</div>
+            <div class="status success">✅ Merged 87 unique providers</div>
+            <div class="status success">✅ Providers by type: { LEAN: 10, YODLEE: 72, VEZGO: 5 }</div>
+            <div class="status success">✅ Link-account page shows 80-100 providers</div>
+        </div>
+
+        <div class="section">
+            <h2>🚀 Quick Actions</h2>
+            <button class="button" onclick="window.location.href='http://localhost:3000/app/more'">
+                🚪 Go to Logout Page
+            </button>
+            <button class="button" onclick="window.location.href='http://localhost:3000/login'">
+                🔑 Go to Login Page
+            </button>
+            <button class="button" onclick="window.location.href='http://localhost:3000/app/link-account'">
+                🏦 Go to Link Account Page
+            </button>
+        </div>
+
+        <div class="section">
+            <h2>📊 What You Should See</h2>
+            <div class="provider-list">
+                <div class="provider-card">
+                    <strong>🇦🇪 UAE Banks (LEAN)</strong><br>
+                    • Emirates NBD<br>
+                    • Dubai Islamic Bank<br>
+                    • ADIB<br>
+                    • Mashreq Bank<br>
+                    • FAB<br>
+                    + 5 more
+                </div>
+                <div class="provider-card">
+                    <strong>🇿🇦 SA Banks (YODLEE)</strong><br>
+                    • Standard Bank<br>
+                    • FNB<br>
+                    • ABSA<br>
+                    • Nedbank<br>
+                    • Capitec<br>
+                    + 67 more
+                </div>
+                <div class="provider-card">
+                    <strong>💰 Crypto (VEZGO)</strong><br>
+                    • Coinbase<br>
+                    • Binance<br>
+                    • Kraken<br>
+                    • Blockchain.com<br>
+                    + 1 more
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📝 Summary</h2>
+            <p>
+                <strong>Multi-API Mode Status:</strong>
+                <span class="status success" style="display: inline-block; padding: 5px 10px;">
+                    ✅ IMPLEMENTED & READY
+                </span>
+            </p>
+            <p>
+                <strong>What to do:</strong>
+            </p>
+            <ol>
+                <li>Logout completely</li>
+                <li>Login again</li>
+                <li>Check browser console for ultra-detailed logs</li>
+                <li>Go to link-account page</li>
+                <li>Verify you see 80-100 providers (UAE + SA)</li>
+            </ol>
+            <p>
+                <strong>Expected Result:</strong> You'll see ALL banks from both UAE and SA in one unified list! 🎉
+            </p>
+        </div>
+    </div>
+
+    <script>
+        console.log('');
+        console.log('╔' + '═'.repeat(78) + '╗');
+        console.log('║' + ' '.repeat(15) + 'MULTI-API TEST PAGE LOADED' + ' '.repeat(37) + '║');
+        console.log('╚' + '═'.repeat(78) + '╝');
+        console.log('');
+        console.log('📋 Instructions:');
+        console.log('1. Logout from /app/more');
+        console.log('2. Login from /login');
+        console.log('3. Look for the ultra-detailed logs in this console');
+        console.log('4. Go to /app/link-account');
+        console.log('5. Verify provider count is 80-100 (not 10-15)');
+        console.log('');
+    </script>
+</body>
+</html>

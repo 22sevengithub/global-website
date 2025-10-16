@@ -10,6 +10,7 @@ import { serviceProviderApi } from '../../../services/api';
 import { ServiceProvider } from '../../../types';
 import { useLeanConnect } from '../../../hooks/useLeanConnect';
 import { ServiceProvider as LeanServiceProvider } from '../../../types/lean';
+import YodleeBankLinkingForm from '../../../components/YodleeBankLinkingForm';
 
 export default function LinkAccountForm() {
   const router = useRouter();
@@ -63,13 +64,31 @@ export default function LinkAccountForm() {
     return found || null;
   }, [aggregate, providerId]);
 
-  // Check if this is a Lean provider (no login form = use Lean SDK)
-  const isLeanProvider = useMemo(() => {
-    if (!provider) return false;
-    // If provider has no accountLoginForm or empty fields, it's a Lean provider
-    return !provider.accountLoginForm?.accountLoginFields ||
-           provider.accountLoginForm.accountLoginFields.length === 0;
+  // Determine provider type: LEAN, VEZGO, or YODLEE (SA banks)
+  const providerType = useMemo(() => {
+    if (!provider) return null;
+
+    // Check integrationProvider field first (most reliable)
+    if (provider.integrationProvider === 'LEAN') {
+      return 'LEAN';
+    }
+    if (provider.integrationProvider === 'VEZGO') {
+      return 'VEZGO';
+    }
+
+    // If provider has accountLoginForm with fields, it's Yodlee (SA banks)
+    if (provider.accountLoginForm?.accountLoginFields &&
+        provider.accountLoginForm.accountLoginFields.length > 0) {
+      return 'YODLEE';
+    }
+
+    // If no login form and no integrationProvider, assume LEAN
+    return 'LEAN';
   }, [provider]);
+
+  const isLeanProvider = providerType === 'LEAN';
+  const isVezgoProvider = providerType === 'VEZGO';
+  const isYodleeProvider = providerType === 'YODLEE';
 
   // Initialize Lean SDK connection for Lean providers
   const {
@@ -329,6 +348,67 @@ export default function LinkAccountForm() {
                 </p>
               </div>
             </div>
+          </div>
+        </AppShell>
+      </ProtectedRoute>
+    );
+  }
+
+  // Show YODLEE form for SA banks
+  if (isYodleeProvider) {
+    console.log('[FormPage] Rendering Yodlee form for SA bank:', provider.name);
+
+    return (
+      <ProtectedRoute>
+        <AppShell title={`Link ${provider.name} | Vault22`}>
+          <div className="max-w-2xl mx-auto">
+            {/* Header */}
+            <div className="mb-8">
+              <Link href="/app/link-account" className="inline-flex items-center text-vault-green hover:text-vault-green-dark mb-4">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Providers
+              </Link>
+
+              <h1 className="text-3xl font-bold font-display text-vault-black dark:text-white mb-2">
+                Link Your South African Bank
+              </h1>
+              <p className="text-vault-gray-600 dark:text-vault-gray-400">
+                Securely connect your {provider.name} account
+              </p>
+            </div>
+
+            {/* Yodlee Form Component */}
+            <YodleeBankLinkingForm
+              serviceProvider={{
+                id: provider.id || provider.ttsId,
+                name: provider.name,
+                canLink: true,
+                accountLoginForm: {
+                  accountLoginFields: provider.accountLoginForm!.accountLoginFields.map(f => ({
+                    ...f,
+                    value: '', // Initialize with empty value
+                  })),
+                },
+              }}
+              customerId={customerInfo?.id || ''}
+              publicKey={aggregate?.config?.encryptionKey || ''}
+              initialAccountCount={aggregate?.accounts?.length || 0}
+              onLoading={setSubmitting}
+              onSuccess={() => {
+                console.log('✅ Yodlee bank linked successfully');
+                router.push('/app/accounts');
+              }}
+              onError={(error) => {
+                console.error('⚠️ Yodlee bank linking failed:', error);
+                setError(error);
+              }}
+              onCancel={() => {
+                console.log('❌ User cancelled Yodlee linking');
+                router.push('/app/link-account');
+              }}
+            />
           </div>
         </AppShell>
       </ProtectedRoute>

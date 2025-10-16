@@ -12,31 +12,63 @@ export default function LinkAccount() {
   const { aggregate, loading } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Get providers from aggregate data
+  // Get providers from aggregate data with type detection
   const providers = useMemo(() => {
+    console.log('[LinkAccount] 🔍 ULTRA DEBUG START ==========');
+    console.log('[LinkAccount] Aggregate exists?', !!aggregate);
+    console.log('[LinkAccount] Aggregate keys:', aggregate ? Object.keys(aggregate) : 'NO AGGREGATE');
+    console.log('[LinkAccount] serviceProviders exists?', !!aggregate?.serviceProviders);
+    console.log('[LinkAccount] serviceProviders type:', typeof aggregate?.serviceProviders);
+    console.log('[LinkAccount] serviceProviders is array?', Array.isArray(aggregate?.serviceProviders));
+
     if (!aggregate?.serviceProviders) {
-      console.log('[LinkAccount] No service providers in aggregate');
+      console.log('[LinkAccount] ❌ No service providers in aggregate');
+      console.log('[LinkAccount] Full aggregate structure:', JSON.stringify(aggregate, null, 2).substring(0, 500));
       return [];
     }
+
     console.log('[LinkAccount] ========== PROVIDERS LOADED ==========');
     console.log('[LinkAccount] Total providers in aggregate:', aggregate.serviceProviders.length);
 
-    // Log first 3 providers to see structure
-    console.log('[LinkAccount] Sample providers (first 3):',
-      aggregate.serviceProviders.slice(0, 3).map(p => ({
+    // Add provider type detection
+    const providersWithType = aggregate.serviceProviders.map(p => {
+      let providerType = 'UNKNOWN';
+
+      if (p.integrationProvider === 'LEAN') {
+        providerType = 'LEAN';
+      } else if (p.integrationProvider === 'VEZGO') {
+        providerType = 'VEZGO';
+      } else if (p.accountLoginForm?.accountLoginFields && p.accountLoginForm.accountLoginFields.length > 0) {
+        providerType = 'YODLEE';
+      }
+
+      return { ...p, providerType };
+    });
+
+    // Log first 5 providers to see structure
+    console.log('[LinkAccount] Sample providers (first 5):',
+      providersWithType.slice(0, 5).map(p => ({
         name: p.name,
         id: p.id,
         ttsId: p.ttsId,
-        hasId: !!p.id,
-        hasTtsId: !!p.ttsId,
         integrationProvider: p.integrationProvider,
-        authType: p.authType,
+        providerType: p.providerType,
+        hasLoginForm: !!p.accountLoginForm,
+        loginFieldCount: p.accountLoginForm?.accountLoginFields?.length || 0,
       }))
     );
 
     // Filter to only show providers that can be linked
-    const linkableProviders = aggregate.serviceProviders.filter(p => p.canLink !== false);
+    const linkableProviders = providersWithType.filter(p => p.canLink !== false);
+
+    // Count by type
+    const typeCounts = linkableProviders.reduce((acc, p) => {
+      acc[p.providerType] = (acc[p.providerType] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
     console.log('[LinkAccount] Linkable providers:', linkableProviders.length);
+    console.log('[LinkAccount] Providers by type:', typeCounts);
     console.log('[LinkAccount] ==========================================');
     return linkableProviders;
   }, [aggregate]);
@@ -206,11 +238,23 @@ export default function LinkAccount() {
                   <h3 className="font-semibold text-sm text-vault-black dark:text-white group-hover:text-vault-green transition-colors">
                     {provider.name}
                   </h3>
-                  {provider.isBeta && (
-                    <span className="inline-block px-2 py-0.5 bg-yellow/20 text-yellow text-xs font-semibold rounded mt-1">
-                      BETA
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1 mt-1">
+                    {provider.isBeta && (
+                      <span className="inline-block px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-xs font-semibold rounded">
+                        BETA
+                      </span>
+                    )}
+                    {(provider as any).providerType === 'YODLEE' && (
+                      <span className="inline-block px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold rounded">
+                        SA Bank
+                      </span>
+                    )}
+                    {(provider as any).providerType === 'LEAN' && (
+                      <span className="inline-block px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs font-semibold rounded">
+                        UAE Bank
+                      </span>
+                    )}
+                  </div>
                 </button>
               ))}
             </div>
@@ -261,11 +305,28 @@ export default function LinkAccount() {
                     <h3 className="font-bold text-vault-black dark:text-white group-hover:text-vault-green transition-colors">
                       {provider.name}
                     </h3>
-                    {provider.isBeta && (
-                      <span className="inline-block px-2 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-xs font-semibold rounded mt-1">
-                        BETA
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2 mt-1">
+                      {provider.isBeta && (
+                        <span className="inline-block px-2 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-xs font-semibold rounded">
+                          BETA
+                        </span>
+                      )}
+                      {(provider as any).providerType === 'YODLEE' && (
+                        <span className="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold rounded">
+                          🇿🇦 SA Bank
+                        </span>
+                      )}
+                      {(provider as any).providerType === 'LEAN' && (
+                        <span className="inline-block px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs font-semibold rounded">
+                          🇦🇪 UAE Bank
+                        </span>
+                      )}
+                      {(provider as any).providerType === 'VEZGO' && (
+                        <span className="inline-block px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs font-semibold rounded">
+                          Crypto
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <svg className="w-6 h-6 text-vault-gray-400 group-hover:text-vault-green transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

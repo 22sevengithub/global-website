@@ -3,6 +3,7 @@
 
 import { customerApi, exchangeRateApi } from './api';
 import { Aggregate, ExchangeRate } from '../types';
+import { fetchProvidersFromAllApis, isMultiApiEnabled } from './multiApiService';
 
 export class PostLoginDataService {
   /**
@@ -102,6 +103,48 @@ export class PostLoginDataService {
       // In production, this would be: /customer/{customerId}/aggregate-recent
       const lastTimestamp = localStorage.getItem('AGGREGATE_TIMESTAMP') || '';
       const aggregateData = await customerApi.getAggregate(customerId, lastTimestamp, false);
+
+      // Multi-API Mode: Fetch service providers from all enabled APIs
+      // Check if multi-API is enabled (2+ APIs configured)
+      console.log('');
+      console.log('╔' + '═'.repeat(78) + '╗');
+      console.log('║' + ' '.repeat(20) + 'MULTI-API MODE CHECK' + ' '.repeat(38) + '║');
+      console.log('╚' + '═'.repeat(78) + '╝');
+      const isMultiApi = isMultiApiEnabled();
+      console.log(`🔍🔍🔍 [PostLogin] Multi-API check result: isMultiApiEnabled=${isMultiApi}`);
+      console.log('');
+
+      if (isMultiApi) {
+        console.log('✅✅✅ [PostLogin] Multi-API mode is ENABLED! Fetching providers from all APIs...');
+        console.log('');
+
+        try {
+          console.log(`📞 [PostLogin] Calling fetchProvidersFromAllApis(${customerId})...`);
+          const multiApiProviders = await fetchProvidersFromAllApis(customerId);
+          console.log(`📥 [PostLogin] fetchProvidersFromAllApis returned ${multiApiProviders.length} providers`);
+
+          if (multiApiProviders && multiApiProviders.length > 0) {
+            const originalCount = aggregateData.serviceProviders?.length || 0;
+            console.log('');
+            console.log('✅✅✅ [PostLogin] MULTI-API SUCCESS!');
+            console.log(`   Original provider count: ${originalCount}`);
+            console.log(`   Multi-API provider count: ${multiApiProviders.length}`);
+            console.log(`   Difference: +${multiApiProviders.length - originalCount} providers`);
+            console.log('');
+            aggregateData.serviceProviders = multiApiProviders as any;
+          } else {
+            console.warn('⚠️⚠️⚠️ [PostLogin] Multi-API fetch returned no providers, keeping original');
+          }
+        } catch (multiApiError) {
+          console.error('❌❌❌ [PostLogin] Multi-API fetch FAILED:', multiApiError);
+          console.error('   Keeping original providers from primary API');
+          // Fall back to original providers from primary API
+        }
+      } else {
+        console.warn('⚠️⚠️⚠️ [PostLogin] Multi-API mode is DISABLED (only 1 API configured)');
+        console.log('   This means you will only see providers from the primary API');
+        console.log('');
+      }
 
       const duration = Date.now() - startTime;
       console.log(`✅ Phase 1 complete in ${duration}ms`);

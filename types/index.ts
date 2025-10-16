@@ -441,6 +441,10 @@ export interface Aggregate {
   profile?: Profile;
   supportedCurrencies?: Currency[];
   baseCurrency?: string;
+  config?: {
+    encryptionKey?: string;  // RSA public key for Yodlee credential encryption
+    [key: string]: any;      // Other config properties
+  };
 }
 
 export interface BudgetBreakdown {

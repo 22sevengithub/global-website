@@ -88,13 +88,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const id = custId || customerId;
     if (!id) return;
 
+    console.log('🔄 [AppContext] Starting loadAggregate for customerId:', id);
     setLoading(true);
     setError(null);
 
     try {
-      // Phase 1: Critical data (includes exchange rates)
+      // Phase 1: Critical data (includes exchange rates + multi-API providers)
+      console.log('📊 [AppContext] Calling postLoginDataService.fetchCriticalData...');
       setLoadingPhase('critical');
       const data = await postLoginDataService.fetchCriticalData(id);
+      console.log(`✅ [AppContext] Critical data fetched:`, {
+        hasServiceProviders: !!data.serviceProviders,
+        providerCount: data.serviceProviders?.length || 0,
+        hasCustomerInfo: !!data.customerInfo,
+        hasExchangeRates: !!data.exchangeRates
+      });
 
       // Load exchange rates from localStorage (fetched in Phase 0 of postLoginDataService)
       const cachedRates = localStorage.getItem('EXCHANGE_RATES');
@@ -108,6 +116,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       setAggregate(data);
       setCustomerInfo(data.customerInfo);
+      console.log(`✅ [AppContext] Aggregate stored in state with ${data.serviceProviders?.length || 0} providers`);
 
       // Update supported currencies in CurrencyContext
       const defaultCurrency = data.customerInfo?.defaultCurrencyCode || data.profile?.baseCurrency;
@@ -119,16 +128,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // Stop blocking loading - allow UI to render with critical data
       setLoading(false);
+      console.log('✅ [AppContext] Phase 1 complete - UI can now render');
 
       // Phase 2: Real-time setup (background)
       setLoadingPhase('realtime');
+      console.log('📡 [AppContext] Phase 2: Setting up real-time connection...');
       await postLoginDataService.setupRealTimeConnection();
 
       // Phase 3: Background fetch (non-blocking)
       setLoadingPhase('background');
+      console.log('🔄 [AppContext] Phase 3: Starting background data fetch...');
       postLoginDataService.fetchBackgroundData(id);
 
       setLoadingPhase('complete');
+      console.log('✅ [AppContext] All 3 phases initiated - post-login flow complete');
     } catch (err: any) {
       setError(err.message || 'Failed to load data');
       console.error('Failed to load aggregate:', err);
